@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "printer_family": "Creality K2 Pro",
+  "old_release": "1.1.0.94",
+  "new_release": "1.1.6.7.2",
+  "cfs": {
+    "old": {
+      "version_entries": [
+        {"boot_ver": "cfs0_050_G30", "app_ver": "cfs0_000_113"},
+        {"boot_ver": "cfs0_050_G32", "app_ver": "cfs0_000_113"}
+      ],
+      "primary_image": {
+        "name": "cfs0_050_G30-cfs0_000_113.bin",
+        "size": 151724,
+        "sha256": "386a1106391a332e6a97803c5ce00b87b6d3ddc4c3d61f6fe07fb19fd3125b76"
+      }
+    },
+    "new": {
+      "version_entries": [
+        {"boot_ver": "cfs0_050_G30", "app_ver": "cfs0_000_150"},
+        {"boot_ver": "cfs0_050_G32", "app_ver": "cfs0_000_150"},
+        {"boot_ver": "cfs6_100_G31", "app_ver": "cfs6_220_000"}
+      ],
+      "primary_image": {
+        "name": "cfs0_050_G30-cfs0_000_150.bin",
+        "size": 175104,
+        "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3"
+      }
+    }
+  },
+  "stock_tools": {
+    "mcu_util": {
+      "old_size": 13912,
+      "old_sha256": "0de7a81ecf31c76fe07d4d5be27f83345dca074806014df69bbe88e0407a23de",
+      "new_size": 13928,
+      "new_sha256": "856d63a8fde31b764c59a2646987822e396aab807137dd345f4d2f685713665e"
+    },
+    "mcu_util_485": {
+      "old_size": 38444,
+      "old_sha256": "dcf3a63136d5ef5766812c22ac243640e26b5600400ef951091ff72fcc0784d8",
+      "new_size": 42540,
+      "new_sha256": "66c66f3ef0bcaa37bcaf4694db9e385c724ab84033aa3f14e80980bbf1076367"
+    },
+    "box_wrapper.cpython-39.so": {
+      "old_size": 1762164,
+      "old_sha256": "6abef0058618890174be450e167049856da639f2a3d02d8b6a3b7f75e7ac2183",
+      "new_size": 2303332,
+      "new_sha256": "b9e601e10c00c22d5ff76fe17a3e7b9f7cf31052c9fa736000e9717999d90507"
+    },
+    "serial_485_wrapper.cpython-39.so": {
+      "old_size": 143724,
+      "old_sha256": "0cf42ba304861570ea3b5e5c9b05088400b2f24a595f6f6a38bc793423959806",
+      "new_size": 143704,
+      "new_sha256": "045ebccd730f604d449edb650e9db62ec000fc67ed9b402969f24c7207db1f13"
+    }
+  },
+  "notes": [
+    "The G30 and G32 CFS images are byte-identical within each compared release.",
+    "The CFS application revision changes from cfs0_000_113 to cfs0_000_150.",
+    "The stock mcu_update shell logic is unchanged for F012; the newer script only adds additional model names to the F012 selection branch.",
+    "No firmware binaries are stored in this repository."
+  ]
+}
