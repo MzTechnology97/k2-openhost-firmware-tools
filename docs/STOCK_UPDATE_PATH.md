@@ -38,6 +38,8 @@ mcu_util -i <nozzle tty> -t           enter transparent mode
 mcu_util -i <nozzle tty> -e           exit transparent mode
 ```
 
+Static decompilation confirms that the stock direct-MCU version request transmits bytes `00 ff`. The receive path expects 26 bytes: a 25-byte combined hardware/application identity followed by the utility's one-byte checksum. This is part of the stock updater/bootloader protocol; K2-OpenHost does not force Main or Nozzle into bootloader mode merely to obtain a live status report.
+
 Static strings in the utility show a staged update protocol including `update_request`, sector-size confirmation, update start, application-length confirmation and application-data transfer.
 
 The stock shell code compares the version returned by the device with the one matching `.bin` in the selected firmware directory and only flashes when the application revision differs, unless a force flag is used.
@@ -68,7 +70,11 @@ Observed command-line interface from the binary:
 -j, --json       CFS update JSON file
 ```
 
-The stock script first performs a broadcast pass and then an update pass using the model firmware directory. During a CFS-targeted OTA, `upgrade-server` creates `/tmp/cfs_update.json` and starts the service with `CFS=1`, causing `mcu_update` to add `-j /tmp/cfs_update.json`.
+The stock script first performs a broadcast pass and then an update pass using the model firmware directory. Static decompilation of both `1.1.0.94` and `1.1.6.7.2` shows the same updater-stage version transaction after discovery/address handling: RS-485 header byte `0x00`, function `0xF0`, one-byte payload `0x00`, with a 500 ms timeout. The binary labels the failure path `get version from slave`. Later stages reuse function `0xF0` with other payloads, including `0x03` and `0x06`; those stages are intentionally not exposed by the read-only tooling.
+
+A normal-application test of `F0/00` against an X motor produced no response. Therefore it is treated as an **updater-stage** command, not as the live runtime version API. Live X/Y/E identification instead uses the application `FLASH_PARAM` read of parameter id 0.
+
+During a CFS-targeted OTA, `upgrade-server` creates `/tmp/cfs_update.json` and starts the service with `CFS=1`, causing `mcu_update` to add `-j /tmp/cfs_update.json`.
 
 ## OTA server evidence
 

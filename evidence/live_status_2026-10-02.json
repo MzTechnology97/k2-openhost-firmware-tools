@@ -1,0 +1,62 @@
+{
+  "devices": [
+    {
+      "bootloader_version": null,
+      "build_machine_uid": "Dec 27 202409:23:29",
+      "clock_hz": 120000000,
+      "device": "main",
+      "identity_scope": "running Klipper/Kalico application",
+      "microcontroller": "gd32f303xe",
+      "object": "mcu",
+      "running_application": "1.1.0.48-312-gcd5c2b81-dirty-20241227_092331-ubuntu",
+      "serial_baud": 230400,
+      "write_enabled": false
+    },
+    {
+      "bootloader_version": null,
+      "build_machine_uid": "Dec 20 202414:39:27",
+      "clock_hz": 120000000,
+      "device": "nozzle",
+      "identity_scope": "running Klipper/Kalico application",
+      "microcontroller": "gd32f303xb",
+      "object": "mcu nozzle_mcu",
+      "running_application": "1.1.0.48-293-g493f9a0f-dirty-20241220_143931-ubuntu1804",
+      "serial_baud": 230400,
+      "write_enabled": false
+    },
+    {
+      "axis": "x",
+      "device": "motor_x",
+      "flash_param_version": 583,
+      "flash_param_version_hex": "0x0247",
+      "match_scope": "known K2 Pro motor firmware artifacts",
+      "matched_application": "mot2_002_071",
+      "query": "runtime FLASH_PARAM read, parameter id 0",
+      "write_enabled": false
+    },
+    {
+      "axis": "y",
+      "device": "motor_y",
+      "flash_param_version": 583,
+      "flash_param_version_hex": "0x0247",
+      "match_scope": "known K2 Pro motor firmware artifacts",
+      "matched_application": "mot2_002_071",
+      "query": "runtime FLASH_PARAM read, parameter id 0",
+      "write_enabled": false
+    },
+    {
+      "axis": "e",
+      "device": "motor_e",
+      "flash_param_version": 583,
+      "flash_param_version_hex": "0x0247",
+      "match_scope": "known K2 Pro motor firmware artifacts",
+      "matched_application": "mot2_002_071",
+      "query": "runtime FLASH_PARAM read, parameter id 0",
+      "write_enabled": false
+    }
+  ],
+  "moonraker": "http://127.0.0.1:7125",
+  "schema": 1,
+  "source": "live-read-only",
+  "write_enabled": false
+}

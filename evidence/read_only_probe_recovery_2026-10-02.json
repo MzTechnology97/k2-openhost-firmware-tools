@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "date": "2026-10-02",
+  "write_operations_performed": false,
+  "stock_rs485_version_query": {
+    "verified_updaters": ["K2 Pro 1.1.0.94", "K2 Pro 1.1.6.7.2"],
+    "header": "0x00",
+    "function": "0xf0",
+    "payload": "00",
+    "timeout_ms": 500,
+    "scope": "stock updater stage after discovery/address handling",
+    "normal_motor_application_response": "no response; not used by runtime status"
+  },
+  "direct_mcu_stock_version_query": {
+    "request": "00ff",
+    "response_identity_bytes": 25,
+    "response_checksum_bytes": 1,
+    "scope": "stock direct-MCU updater/bootloader path; not executed live"
+  },
+  "motor_runtime_fingerprints": {
+    "mot2_002_071": {"flash_param_version": 583, "hex": "0x0247"},
+    "mot2_002_081": {"flash_param_version": 587, "hex": "0x024b"}
+  },
+  "development_printer_live_result": {
+    "motor_x": 583,
+    "motor_y": 583,
+    "motor_e": 583,
+    "matched_application": "mot2_002_071"
+  }
+}

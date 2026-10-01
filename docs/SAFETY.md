@@ -24,7 +24,11 @@ This project does not replace the T113 system/rootfs automatically. Its purpose 
 
 ## Bus safety
 
-The K2 RS-485 bus is shared by closed-loop motors and CFS-related devices. Only one process may own the CM5 `/dev/ttyUSB2` transport at a time. Firmware discovery and update code must serialize requests and must never run concurrently with the normal Kalico RS-485 driver.
+The K2 RS-485 bus is shared by closed-loop motors and CFS-related devices. Direct serial probing requires exclusive ownership of the CM5 `/dev/ttyUSB2` transport and must never race the normal Kalico RS-485 driver.
+
+The validated X/Y/E runtime fingerprint does **not** open `/dev/ttyUSB2` directly. It asks the existing Kalico `motor_control` object to perform a normal application-level `FLASH_PARAM` read of parameter id 0, including E through the Nozzle MCU transparent transport. The tool refuses this query while homing, printing or paused.
+
+The stock updater's `F0/00` command is documented as protocol evidence but is not exposed as the normal runtime motor probe. A live application-mode test produced no response, so `k2fw status` deliberately uses the validated parameter read instead.
 
 ## Repository contents
 

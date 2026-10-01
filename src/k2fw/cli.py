@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .live import query_klipper_mcus, query_motor_runtime_versions, query_printer_status
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .preflight import run_preflight
 from .rs485 import probe_cfs_version
@@ -64,6 +65,24 @@ def cmd_probe_cfs(args: argparse.Namespace) -> int:
         baud=args.baud,
         timeout=args.timeout,
     )
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_probe_mcus(args: argparse.Namespace) -> int:
+    result = query_klipper_mcus(args.moonraker, timeout=args.timeout)
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_probe_motors(args: argparse.Namespace) -> int:
+    result = query_motor_runtime_versions(args.moonraker, timeout=args.timeout)
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_status(args: argparse.Namespace) -> int:
+    result = query_printer_status(args.moonraker, timeout=args.timeout)
     _write_or_print(result, args.output)
     return 0
 
@@ -136,6 +155,39 @@ def build_parser() -> argparse.ArgumentParser:
     )
     probe.add_argument("-o", "--output", help="write JSON result to this path")
     probe.set_defaults(func=cmd_probe_cfs)
+
+    probe_mcus = sub.add_parser(
+        "probe-mcus",
+        help="read Main/Nozzle running MCU application identities from Moonraker",
+    )
+    probe_mcus.add_argument(
+        "--moonraker", default="http://127.0.0.1:7125", help="Moonraker base URL"
+    )
+    probe_mcus.add_argument("--timeout", type=float, default=3.0)
+    probe_mcus.add_argument("-o", "--output", help="write JSON result to this path")
+    probe_mcus.set_defaults(func=cmd_probe_mcus)
+
+    probe_motors = sub.add_parser(
+        "probe-motors",
+        help="read X/Y/E runtime motor firmware fingerprints without writes",
+    )
+    probe_motors.add_argument(
+        "--moonraker", default="http://127.0.0.1:7125", help="Moonraker base URL"
+    )
+    probe_motors.add_argument("--timeout", type=float, default=3.0)
+    probe_motors.add_argument("-o", "--output", help="write JSON result to this path")
+    probe_motors.set_defaults(func=cmd_probe_motors)
+
+    status = sub.add_parser(
+        "status",
+        help="read Main, Nozzle and X/Y/E runtime firmware identities",
+    )
+    status.add_argument(
+        "--moonraker", default="http://127.0.0.1:7125", help="Moonraker base URL"
+    )
+    status.add_argument("--timeout", type=float, default=3.0)
+    status.add_argument("-o", "--output", help="write JSON result to this path")
+    status.set_defaults(func=cmd_status)
 
     return parser
 

@@ -15,6 +15,17 @@ This page records byte-level differences between the user-supplied K2 Pro stock 
 
 The motor application change is present in both the root F012 motor images and the `F012/motor/` variants. The newer motor binaries are also larger, so the change is not only a renamed version token.
 
+### Runtime motor fingerprint
+
+Static decompilation gives an application-level fingerprint that can be read without entering the updater/bootloader path:
+
+| Motor application | `flash_param_version` | Decimal |
+| --- | ---: | ---: |
+| `mot2_002_071` | `0x0247` | 583 |
+| `mot2_002_081` | `0x024b` | 587 |
+
+On 2026-10-02 the development K2 Pro returned 583 from X, Y and E through the normal motor `FLASH_PARAM` read command, so all three match the analysed `mot2_002_071` generation. This is an exact match within the firmware artifacts analysed by this project, not a claim that 583 uniquely identifies every Creality motor firmware ever released.
+
 ## CFS
 
 The old G30/G32 images are 151724 bytes and share the same SHA-256. The newer G30/G32 images are 175104 bytes and also share the same SHA-256 within that release. The newer bundle additionally introduces the separate `cfs6_100_G31-cfs6_220_000` target.

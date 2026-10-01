@@ -17,19 +17,23 @@ Completed/validated:
 - CFS runtime `VERSION_SN` probe over RS-485;
 - exact local firmware candidate resolver that refuses ambiguous hardware matches and never enables writes;
 - candidate resolver validated against the real extracted `1.1.6.7.2` bundle (`cfs0_050_G30` -> `cfs0_000_150`, expected SHA-256);
-- live CM5 flash preflight: print state, heater targets and serial-port ownership are checked read-only; with normal Klipper running the preflight correctly blocks because `/dev/ttyUSB0..2` are owned by Klippy.
+- live CM5 flash preflight: print state, heater targets and serial-port ownership are checked read-only; with normal Klipper running the preflight correctly blocks because `/dev/ttyUSB0..2` are owned by Klippy;
+- X/Y/E runtime firmware fingerprint via application `FLASH_PARAM` id 0 (`583/0x0247` = known `mot2_002_071`; analysed `081` uses `587/0x024b`);
+- Main MCU and Nozzle MCU running Klipper/Kalico application identity via Moonraker;
+- unified `k2fw status` for Main + Nozzle + X/Y/E.
 
 Still required:
 
 - discover CFS boot/hardware variant without entering update mode;
-- query X/Y/E motor hardware/application versions without changing parameters;
-- query main MCU and nozzle MCU boot/application versions;
-- produce one `k2fw status` report combining live devices with a selected local firmware tree.
+- recover Main/Nozzle stock bootloader hardware/application identity without forcing bootloader entry;
+- combine the live report with an explicitly selected local firmware tree.
 
 ## Phase 3 — stock update protocol recovery
 
-- recover serial MCU update frame sequence from `mcu_util`;
-- recover RS-485 bootloader/update frame sequence from `mcu_util_485`;
+- direct MCU stock version request `00 ff` and 25-byte identity response: **recovered statically**;
+- RS-485 updater-stage version request `F0/00`: **recovered statically in both compared updater generations**;
+- recover the remaining serial MCU update frame sequence from `mcu_util`;
+- recover the remaining RS-485 bootloader/update frame sequence from `mcu_util_485`;
 - compare old/new updater implementations (already confirmed to be different binaries);
 - implement frame codecs with unit tests and captured read-only fixtures;
 - identify recovery/startup commands for interrupted updates.

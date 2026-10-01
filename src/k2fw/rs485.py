@@ -156,3 +156,99 @@ def probe_cfs_version(
         "request_hex": request.hex(),
         "response_hex": frame.hex(),
     }
+
+# Stock mcu_util_485 read-only version request recovered from K2 Pro 1.1.0.94
+# and 1.1.6.7.2.  The same 0xF0 command is also used by the stock updater for
+# destructive stages with DIFFERENT payloads; this module deliberately exposes
+# only the payload-0 version query.
+CMD_STOCK_FIRMWARE = 0xF0
+STOCK_VERSION_QUERY = b"\x00"
+STOCK_VERSION_LENGTH = 25
+
+
+def build_stock_version_request(address: int) -> bytes:
+    """Build only the stock read-only firmware-version request (F0/00)."""
+    return build_frame(address, CMD_STOCK_FIRMWARE, STOCK_VERSION_QUERY, header=0x00)
+
+
+def parse_stock_version_payload(payload: bytes) -> dict[str, str]:
+    payload = bytes(payload)
+    if len(payload) != STOCK_VERSION_LENGTH:
+        raise ValueError(
+            f"stock version payload must be {STOCK_VERSION_LENGTH} bytes, got {len(payload)}"
+        )
+    try:
+        version = payload.decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise ValueError("stock version payload is not ASCII") from exc
+    if any(ord(ch) < 0x20 or ord(ch) > 0x7E for ch in version):
+        raise ValueError("stock version payload contains non-printable bytes")
+    hardware, sep, application = version.partition("-")
+    if not sep or not hardware or not application:
+        raise ValueError("stock version payload is not hardware-application form")
+    return {
+        "version": version,
+        "hardware": hardware,
+        "application": application,
+    }
+
+
+def probe_rs485_firmware_version(
+    port: str,
+    address: int,
+    baud: int = 230400,
+    timeout: float = 1.0,
+) -> dict[str, Any]:
+    """Read one RS-485 device's 25-byte stock updater-stage identity.
+
+    This sends exactly one F0/00 query.  It does not discover/assign addresses,
+    erase private flash, request an update, transfer data, or start/reset an app.
+    Stock analysis places this transaction after discovery/address handling and
+    a normal running motor application does not respond to it, so this helper is
+    protocol-recovery infrastructure rather than the normal runtime probe.
+    The port must already be exclusively owned by this process.
+    """
+    owners = port_owners(port)
+    if owners:
+        detail = ", ".join(f"pid {o['pid']} {o['command']}" for o in owners)
+        raise RuntimeError(f"serial port is already in use: {detail}")
+
+    try:
+        import serial
+    except ImportError as exc:
+        raise RuntimeError("pyserial is required for live probing") from exc
+
+    request = build_stock_version_request(address)
+    with serial.Serial(
+        port=port,
+        baudrate=baud,
+        timeout=timeout,
+        write_timeout=timeout,
+        bytesize=serial.EIGHTBITS,
+        parity=serial.PARITY_NONE,
+        stopbits=serial.STOPBITS_ONE,
+        xonxoff=False,
+        rtscts=False,
+        dsrdtr=False,
+    ) as device:
+        device.reset_input_buffer()
+        device.reset_output_buffer()
+        device.write(request)
+        device.flush()
+        frame = _read_frame(device)
+
+    reply = decode_response(frame, address, CMD_STOCK_FIRMWARE)
+    if reply["status"] != 0:
+        raise RuntimeError(f"version query returned status 0x{reply['status']:02x}")
+    identity = parse_stock_version_payload(reply["payload"])
+    return {
+        "port": port,
+        "baud": baud,
+        "address": address,
+        "status": reply["status"],
+        **identity,
+        "request_hex": request.hex(),
+        "response_hex": frame.hex(),
+        "protocol_scope": "stock updater stage",
+        "write_enabled": False,
+    }

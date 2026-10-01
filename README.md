@@ -45,7 +45,7 @@ This makes firmware-generation differences a credible explanation for protocol d
 
 ## Current scope
 
-The current implementation provides safe firmware-tree scanning, manifest comparison, exact target resolution and read-only CFS version probing. It does not contain a flash command yet.
+The current implementation provides safe firmware-tree scanning, manifest comparison, exact target resolution, CFS probing and a live read-only status path for Main MCU, Nozzle MCU and X/Y/E closed-loop motor controllers. It does **not** contain a flash command.
 
 ```bash
 python -m k2fw scan /path/to/usr/share/klipper/fw -o firmware.json
@@ -59,13 +59,23 @@ python -m k2fw resolve firmware.json \
 
 `resolve` deliberately produces a candidate-only plan with `write_enabled=false`. It requires an exact hardware token and refuses ambiguous targets; it is groundwork for the later updater, not a flashing shortcut.
 
+For live state while Kalico is running:
+
+```bash
+python -m k2fw probe-mcus
+python -m k2fw probe-motors
+python -m k2fw status
+```
+
+`probe-motors` uses the normal motor application protocol and reads parameter id 0 (`flash_param_version`) through the existing Kalico transport. On the development K2 Pro all X/Y/E controllers report `0x0247` (583), which exactly matches the analysed `mot2_002_071` image; the analysed `mot2_002_081` image uses `0x024b` (587). The mapping is intentionally limited to the known K2 Pro artifacts.
+
 For a live CFS query, first release the RS-485 port from Klipper and then explicitly acknowledge exclusive ownership:
 
 ```bash
 python -m k2fw probe-cfs --port /dev/ttyUSB2 --exclusive
 ```
 
-See `docs/STOCK_UPDATE_PATH.md` for the recovered stock update flow, `docs/PERIPHERAL_GENERATIONS.md` for the old/new device deltas and `docs/SAFETY.md` for the validation gates required before write support is enabled.
+See `docs/LIVE_READ_ONLY_STATUS.md` for the validated live probes, `docs/STOCK_UPDATE_PATH.md` for the recovered stock update flow, `docs/PERIPHERAL_GENERATIONS.md` for the old/new device deltas and `docs/SAFETY.md` for the validation gates required before write support is enabled.
 
 ## Project relationship
 
