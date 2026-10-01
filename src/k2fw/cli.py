@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
+from .preflight import run_preflight
 from .rs485 import probe_cfs_version
 from .selection import build_candidate_plan
 
@@ -40,6 +41,16 @@ def cmd_resolve(args: argparse.Namespace) -> int:
     )
     _write_or_print(result, args.output)
     return 0
+
+
+def cmd_preflight(args: argparse.Namespace) -> int:
+    result = run_preflight(
+        args.port,
+        base_url=args.moonraker,
+        timeout=args.timeout,
+    )
+    _write_or_print(result, args.output)
+    return 0 if result["safe_for_flash"] else 3
 
 
 def cmd_probe_cfs(args: argparse.Namespace) -> int:
@@ -92,6 +103,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     resolve.add_argument("-o", "--output", help="write JSON plan to this path")
     resolve.set_defaults(func=cmd_resolve)
+
+    preflight = sub.add_parser(
+        "preflight",
+        help="read-only check of print state, heaters and serial-port ownership",
+    )
+    preflight.add_argument(
+        "--moonraker", default="http://127.0.0.1:7125", help="Moonraker base URL"
+    )
+    preflight.add_argument(
+        "--port",
+        action="append",
+        default=[],
+        help="serial device that must be exclusively owned; repeat for multiple ports",
+    )
+    preflight.add_argument("--timeout", type=float, default=3.0)
+    preflight.add_argument("-o", "--output", help="write JSON result to this path")
+    preflight.set_defaults(func=cmd_preflight)
 
     probe = sub.add_parser(
         "probe-cfs",
