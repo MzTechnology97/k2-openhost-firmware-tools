@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "k2-openhost-firmware-tools"
 version = "0.1.0"
-description = "Read-only firmware inventory and comparison tools for K2-OpenHost"
+description = "Firmware inventory, comparison and safe probing tools for K2-OpenHost"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "GPL-3.0-or-later"}
 authors = [{name = "K2-OpenHost contributors"}]
-dependencies = []
+dependencies = ["pyserial>=3.5"]
 
 [project.scripts]
 k2fw = "k2fw.cli:main"
