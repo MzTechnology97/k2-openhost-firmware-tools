@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "k2-openhost-firmware-tools"
+version = "0.1.0"
+description = "Read-only firmware inventory and comparison tools for K2-OpenHost"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "GPL-3.0-or-later"}
+authors = [{name = "K2-OpenHost contributors"}]
+dependencies = []
+
+[project.scripts]
+k2fw = "k2fw.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
