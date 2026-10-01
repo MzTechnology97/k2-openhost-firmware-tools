@@ -39,18 +39,33 @@ A comparison of stock K2 Pro firmware `1.1.0.94` with `1.1.6.7.2` confirms that 
 
 The G30/G32 CFS images are identical within each release, but the application revision changes from `cfs0_000_113` to `cfs0_000_150`. The newer release also adds a `cfs6_100_G31-cfs6_220_000.bin` variant.
 
+The F012 closed-loop motor firmware also changes from application `mot2_002_071` to `mot2_002_081`, while the compared F012 main MCU, nozzle MCU, belt and RFID images are byte-identical. See `docs/PERIPHERAL_GENERATIONS.md`.
+
 This makes firmware-generation differences a credible explanation for protocol differences observed between older K2 Pro hardware and integrations developed against newer CFS firmware. It does **not** by itself prove which individual protocol fields changed; that still requires wire-level or binary comparison.
 
 ## Current scope
 
-The first implementation provides a safe firmware-tree scanner and manifest comparer. It does not contain a flash command yet.
+The current implementation provides safe firmware-tree scanning, manifest comparison, exact target resolution and read-only CFS version probing. It does not contain a flash command yet.
 
 ```bash
-python -m k2fw scan /path/to/usr/share/klipper/fw
+python -m k2fw scan /path/to/usr/share/klipper/fw -o firmware.json
 python -m k2fw compare old-manifest.json new-manifest.json
+python -m k2fw resolve firmware.json \
+  --hardware cfs0_050_G30 \
+  --kind cfs \
+  --parent cfs \
+  --current-application cfs0_000_113
 ```
 
-See `docs/STOCK_UPDATE_PATH.md` for the recovered stock update flow and `docs/SAFETY.md` for the validation gates required before write support is enabled.
+`resolve` deliberately produces a candidate-only plan with `write_enabled=false`. It requires an exact hardware token and refuses ambiguous targets; it is groundwork for the later updater, not a flashing shortcut.
+
+For a live CFS query, first release the RS-485 port from Klipper and then explicitly acknowledge exclusive ownership:
+
+```bash
+python -m k2fw probe-cfs --port /dev/ttyUSB2 --exclusive
+```
+
+See `docs/STOCK_UPDATE_PATH.md` for the recovered stock update flow, `docs/PERIPHERAL_GENERATIONS.md` for the old/new device deltas and `docs/SAFETY.md` for the validation gates required before write support is enabled.
 
 ## Project relationship
 
