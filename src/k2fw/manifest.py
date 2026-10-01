@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 
@@ -86,23 +86,25 @@ def scan_tree(root: str | Path) -> dict[str, Any]:
     }
 
 
-def _key(item: dict[str, Any]) -> tuple[str, str]:
-    # Creality changes the application token in the filename between releases.
-    # Match the same hardware target by its left-hand hardware identifier so a
-    # version transition is reported as changed instead of removed + added.
+def _key(item: dict[str, Any]) -> tuple[str, str, str]:
+    # A full stock tree contains the same hardware identifier under different
+    # model directories (for example F008/belt and F012/belt). Preserve the
+    # parent location while ignoring the filename's changing application token.
+    parent = str(PurePosixPath(str(item.get("path", ""))).parent)
     return (
+        parent,
         str(item.get("kind", "unknown")),
         str(item.get("hardware", "")),
     )
 
 
-def _index(items: list[dict[str, Any]]) -> dict[tuple[str, str], dict[str, Any]]:
-    result: dict[tuple[str, str], dict[str, Any]] = {}
+def _index(items: list[dict[str, Any]]) -> dict[tuple[str, str, str], dict[str, Any]]:
+    result: dict[tuple[str, str, str], dict[str, Any]] = {}
     for item in items:
         key = _key(item)
         if key in result:
             raise ValueError(
-                "duplicate firmware target in manifest: %s/%s" % key
+                "duplicate firmware target in manifest: %s/%s/%s" % key
             )
         result[key] = item
     return result
