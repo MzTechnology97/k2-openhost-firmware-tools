@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .rs485 import probe_cfs_version
+from .selection import build_candidate_plan
 
 
 def _write_or_print(data: dict, output: str | None) -> None:
@@ -25,6 +26,18 @@ def cmd_scan(args: argparse.Namespace) -> int:
 
 def cmd_compare(args: argparse.Namespace) -> int:
     result = compare_manifests(load_manifest(args.old), load_manifest(args.new))
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_resolve(args: argparse.Namespace) -> int:
+    result = build_candidate_plan(
+        load_manifest(args.manifest),
+        args.hardware,
+        current_application=args.current_application,
+        kind=args.kind,
+        parent=args.parent,
+    )
     _write_or_print(result, args.output)
     return 0
 
@@ -61,6 +74,24 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("new", help="newer manifest JSON")
     compare.add_argument("-o", "--output", help="write comparison JSON to this path")
     compare.set_defaults(func=cmd_compare)
+
+    resolve = sub.add_parser(
+        "resolve",
+        help="resolve one exact local firmware candidate without enabling writes",
+    )
+    resolve.add_argument("manifest", help="scan manifest JSON")
+    resolve.add_argument("--hardware", required=True, help="exact hardware token")
+    resolve.add_argument("--kind", help="optional artifact kind filter")
+    resolve.add_argument(
+        "--parent",
+        help="exact parent path inside the firmware tree, e.g. F012/motor or cfs",
+    )
+    resolve.add_argument(
+        "--current-application",
+        help="currently running application token, used only to report whether an update differs",
+    )
+    resolve.add_argument("-o", "--output", help="write JSON plan to this path")
+    resolve.set_defaults(func=cmd_resolve)
 
     probe = sub.add_parser(
         "probe-cfs",
