@@ -86,17 +86,31 @@ def scan_tree(root: str | Path) -> dict[str, Any]:
     }
 
 
-def _key(item: dict[str, Any]) -> tuple[str, str, str]:
+def _key(item: dict[str, Any]) -> tuple[str, str]:
+    # Creality changes the application token in the filename between releases.
+    # Match the same hardware target by its left-hand hardware identifier so a
+    # version transition is reported as changed instead of removed + added.
     return (
         str(item.get("kind", "unknown")),
         str(item.get("hardware", "")),
-        str(item.get("path", "")),
     )
 
 
+def _index(items: list[dict[str, Any]]) -> dict[tuple[str, str], dict[str, Any]]:
+    result: dict[tuple[str, str], dict[str, Any]] = {}
+    for item in items:
+        key = _key(item)
+        if key in result:
+            raise ValueError(
+                "duplicate firmware target in manifest: %s/%s" % key
+            )
+        result[key] = item
+    return result
+
+
 def compare_manifests(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
-    old_map = {_key(item): item for item in old.get("artifacts", [])}
-    new_map = {_key(item): item for item in new.get("artifacts", [])}
+    old_map = _index(old.get("artifacts", []))
+    new_map = _index(new.get("artifacts", []))
 
     added = []
     removed = []
