@@ -180,7 +180,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     status = sub.add_parser(
         "status",
-        help="read Main, Nozzle and X/Y/E runtime firmware identities",
+        help="read Main, Nozzle, X/Y/E and CFS runtime firmware identities",
     )
     status.add_argument(
         "--moonraker", default="http://127.0.0.1:7125", help="Moonraker base URL"

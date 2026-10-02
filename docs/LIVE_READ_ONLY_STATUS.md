@@ -38,6 +38,25 @@ E -> 583 / 0x0247 -> mot2_002_071
 
 The application mapping is scoped to the firmware artifacts analysed by this project. Unknown values remain unknown rather than being inferred.
 
+## CFS runtime identity and boot/hardware limit
+
+`k2fw status` now consumes the CFS state already exposed by the running Kalico `box` object. It copies only the application firmware version and deliberately drops the CFS serial number, raw payload and full VERSION_SN text.
+
+Validated development-printer result:
+
+```text
+CFS address 1
+running application version: 1.1.3
+matched application: cfs0_000_113
+boot hardware: unknown
+```
+
+The missing G30/G32 value is intentional, not an unresolved parser bug. Static Cortex-M/Thumb analysis of the 151724-byte `cfs0_050_G30-cfs0_000_113.bin` application (SHA-256 `386a1106391a332e6a97803c5ce00b87b6d3ddc4c3d61f6fe07fb19fd3125b76`) recovered 606 functions. The normal application exposes `0x14` VERSION_SN and `0x15` diagnostics; the analysis did not identify a runtime path that accepts the stock `F0/00` exact-identity query. The same 1.1.3 G30 and G32 application images are byte-identical and contain the application token `cfs0_000_113`, not a G30/G32 boot token.
+
+Two bounded live checks matched that result: both operational-header `FF/F0/00` and addressing-header `00/F0/00` returned status `0x01` (`INVALID_PARAM`) with no identity payload at the already assigned CFS address. No erase, update request, reset, address reassignment or bootloader-entry command was sent.
+
+Static analysis of stock `mcu_util_485` shows that its exact-identity `F0/00` read occurs after its own discovery/address-management sequence, including A1/A0. Reproducing A0 would change RS-485 address state, so K2-OpenHost deliberately stops before that point. An exact G30/G32 value therefore remains a safety gate for future write support, not something `status` guesses.
+
 ## Stock updater version commands
 
 Static analysis recovered two other version mechanisms:
@@ -45,7 +64,7 @@ Static analysis recovered two other version mechanisms:
 - direct `mcu_util`: request `00 ff`, response 25-byte identity plus checksum;
 - `mcu_util_485`: function `0xF0`, payload `0x00` after stock discovery/address handling.
 
-Both are updater-path protocol evidence. The RS-485 `F0/00` request was also confirmed in both compared host updater generations, but an application-mode X motor did not respond to it. It is therefore not used by `k2fw status`.
+Both are updater-path protocol evidence. The RS-485 `F0/00` request was confirmed in both compared host updater generations. On the development K2 Pro, bounded runtime probes returned `INVALID_PARAM` for both tested headers; the stock utility reaches its identity read only after discovery/address management. It is therefore not used by `k2fw status`.
 
 ## Commands
 

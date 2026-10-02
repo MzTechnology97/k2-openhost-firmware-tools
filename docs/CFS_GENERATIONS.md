@@ -13,6 +13,8 @@ The newer package also contains the separate `cfs6_100_G31-cfs6_220_000` target.
 
 A read-only live `VERSION_SN` query on the K2-OpenHost development K2 Pro reports firmware **1.1.3**, matching the `cfs0_000_113` generation contained in stock host firmware 1.1.0.94. The query was performed over the CM5 `/dev/ttyUSB2` RS-485 bridge with Klipper stopped so the bus had a single owner. No write/update command was sent.
 
+The G30 and G32 1.1.3 application images are byte-identical, so application version 1.1.3 cannot distinguish those boot/hardware variants. Two bounded runtime `F0/00` checks at the assigned CFS address returned `INVALID_PARAM`; K2-OpenHost does not reproduce the stock A1/A0 address-management sequence just to obtain a boot token. The exact G30/G32 value therefore remains unknown in live status.
+
 ## Wrapper delta
 
 The stock `box_wrapper.cpython-39.so` also changed substantially between the same releases:

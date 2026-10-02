@@ -45,7 +45,7 @@ This makes firmware-generation differences a credible explanation for protocol d
 
 ## Current scope
 
-The current implementation provides safe firmware-tree scanning, manifest comparison, exact target resolution, CFS probing and a live read-only status path for Main MCU, Nozzle MCU and X/Y/E closed-loop motor controllers. It does **not** contain a flash command.
+The current implementation provides safe firmware-tree scanning, manifest comparison, exact target resolution, CFS probing and a live read-only status path for Main MCU, Nozzle MCU, X/Y/E closed-loop motor controllers and the CFS application. It does **not** contain a flash command.
 
 ```bash
 python -m k2fw scan /path/to/usr/share/klipper/fw -o firmware.json
@@ -68,6 +68,8 @@ python -m k2fw status
 ```
 
 `probe-motors` uses the normal motor application protocol and reads parameter id 0 (`flash_param_version`) through the existing Kalico transport. On the development K2 Pro all X/Y/E controllers report `0x0247` (583), which exactly matches the analysed `mot2_002_071` image; the analysed `mot2_002_081` image uses `0x024b` (587). The mapping is intentionally limited to the known K2 Pro artifacts.
+
+`status` also reads the already-published CFS `VERSION_SN` state from Moonraker. On the development K2 Pro it reports application `1.1.3`, mapped to the analysed `cfs0_000_113` application. It deliberately reports the boot/hardware variant as unknown: Cortex-M analysis did not identify a runtime path that accepts the stock `F0/00` identity query, and bounded live checks with both operational and addressing headers returned `INVALID_PARAM`. Stock `mcu_util_485` reaches `F0/00` only after its A1/A0 address-management sequence; `status` does not reproduce that state-changing sequence.
 
 For a live CFS query, first release the RS-485 port from Klipper and then explicitly acknowledge exclusive ownership:
 

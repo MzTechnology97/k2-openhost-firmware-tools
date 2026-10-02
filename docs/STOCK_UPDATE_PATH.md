@@ -72,7 +72,7 @@ Observed command-line interface from the binary:
 
 The stock script first performs a broadcast pass and then an update pass using the model firmware directory. Static decompilation of both `1.1.0.94` and `1.1.6.7.2` shows the same updater-stage version transaction after discovery/address handling: RS-485 header byte `0x00`, function `0xF0`, one-byte payload `0x00`, with a 500 ms timeout. The binary labels the failure path `get version from slave`. Later stages reuse function `0xF0` with other payloads, including `0x03` and `0x06`; those stages are intentionally not exposed by the read-only tooling.
 
-A normal-application test of `F0/00` against an X motor produced no response. Therefore it is treated as an **updater-stage** command, not as the live runtime version API. Live X/Y/E identification instead uses the application `FLASH_PARAM` read of parameter id 0.
+A normal-application test of `F0/00` against an X motor produced no response. On the development K2 Pro CFS 1.1.3, bounded `F0/00` tests at the already assigned address returned status `0x01` (`INVALID_PARAM`) with both operational header `0xFF` and addressing header `0x00`. No A0 address assignment was reproduced. Therefore `F0/00` is not used as a normal runtime identity API by K2-OpenHost. Live X/Y/E identification instead uses the application `FLASH_PARAM` read of parameter id 0, while the CFS runtime reports only its safe `VERSION_SN` application version.
 
 During a CFS-targeted OTA, `upgrade-server` creates `/tmp/cfs_update.json` and starts the service with `CFS=1`, causing `mcu_update` to add `-j /tmp/cfs_update.json`.
 

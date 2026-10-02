@@ -28,7 +28,9 @@ The K2 RS-485 bus is shared by closed-loop motors and CFS-related devices. Direc
 
 The validated X/Y/E runtime fingerprint does **not** open `/dev/ttyUSB2` directly. It asks the existing Kalico `motor_control` object to perform a normal application-level `FLASH_PARAM` read of parameter id 0, including E through the Nozzle MCU transparent transport. The tool refuses this query while homing, printing or paused.
 
-The stock updater's `F0/00` command is documented as protocol evidence but is not exposed as the normal runtime motor probe. A live application-mode test produced no response, so `k2fw status` deliberately uses the validated parameter read instead.
+The stock updater's `F0/00` command is documented as protocol evidence but is not exposed as the normal runtime motor probe. A live application-mode motor test produced no response, so `k2fw status` deliberately uses the validated parameter read instead.
+
+For CFS 1.1.3, bounded `F0/00` probes with both tested headers returned `INVALID_PARAM`. Stock exact-identity discovery proceeds through A1/A0 address management; because A0 changes bus address state, the read-only tooling does not reproduce it. Future CFS write support must obtain the exact boot/hardware variant from a non-mutating source or require explicit, independently verified target provenance.
 
 ## Repository contents
 

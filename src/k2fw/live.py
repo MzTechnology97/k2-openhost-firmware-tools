@@ -16,6 +16,21 @@ KNOWN_MOTOR_FLASH_PARAM_VERSIONS = {
     0x024B: "mot2_002_081",
 }
 
+# VERSION_SN encodes the cfs0 application token as three decimal digits.
+# G30/G32 use byte-identical application images in the analysed bundles, so
+# this mapping intentionally identifies the application only, never hardware.
+KNOWN_CFS_RUNTIME_VERSIONS = {
+    "1.1.3": "cfs0_000_113",
+    "1.5.0": "cfs0_000_150",
+}
+
+CFS_BOOT_VARIANT_REASON = (
+    "not exposed by the validated K2 Pro CFS 1.1.3 runtime queries; both "
+    "FF/F0/00 and 00/F0/00 return INVALID_PARAM at the assigned address, "
+    "while stock mcu_util_485 reaches F0/00 after its A1/A0 address-management "
+    "sequence, which k2fw does not reproduce in read-only status mode"
+)
+
 
 def _get_json(url: str, timeout: float) -> dict[str, Any]:
     with urlopen(url, timeout=timeout) as response:
@@ -82,6 +97,46 @@ def query_klipper_mcus(
     return {
         "schema": 1,
         "source": "moonraker",
+        "moonraker": base_url,
+        "devices": devices,
+        "write_enabled": False,
+    }
+
+
+def normalize_cfs_runtime(address: str, raw: dict[str, Any]) -> dict[str, Any]:
+    firmware = raw.get("firmware")
+    return {
+        "device": f"cfs_{address}",
+        "address": int(address),
+        "running_application_version": firmware,
+        "matched_application": KNOWN_CFS_RUNTIME_VERSIONS.get(firmware),
+        "match_scope": "known K2 Pro cfs0 application artifacts",
+        "boot_hardware": None,
+        "boot_hardware_reason": CFS_BOOT_VARIANT_REASON,
+        "identity_scope": "running CFS application VERSION_SN only",
+        "write_enabled": False,
+    }
+
+
+def query_cfs_runtime(
+    base_url: str = "http://127.0.0.1:7125",
+    *,
+    timeout: float = 3.0,
+) -> dict[str, Any]:
+    status = _object_status(base_url, ("box",), timeout)
+    box = status.get("box")
+    if not isinstance(box, dict):
+        raise RuntimeError("Moonraker did not return the box status object")
+    versions = box.get("cfs_versions") or {}
+    devices = []
+    for address, raw in sorted(versions.items(), key=lambda item: int(item[0])):
+        if not isinstance(raw, dict) or not raw.get("firmware"):
+            continue
+        # Deliberately discard serial/text/raw fields from the status report.
+        devices.append(normalize_cfs_runtime(str(address), raw))
+    return {
+        "schema": 1,
+        "source": "moonraker/box",
         "moonraker": base_url,
         "devices": devices,
         "write_enabled": False,
@@ -166,10 +221,11 @@ def query_printer_status(
 ) -> dict[str, Any]:
     mcus = query_klipper_mcus(base_url, timeout=timeout)
     motors = query_motor_runtime_versions(base_url, timeout=timeout)
+    cfs = query_cfs_runtime(base_url, timeout=timeout)
     return {
         "schema": 1,
         "source": "live-read-only",
         "moonraker": base_url,
-        "devices": mcus["devices"] + motors["devices"],
+        "devices": mcus["devices"] + motors["devices"] + cfs["devices"],
         "write_enabled": False,
     }

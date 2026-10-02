@@ -1,0 +1,51 @@
+{
+  "application_artifact": {
+    "exported_functions": 606,
+    "g30_g32_application_images_byte_identical": true,
+    "ghidra_language": "ARM:LE:32:Cortex:default",
+    "sha256": "386a1106391a332e6a97803c5ce00b87b6d3ddc4c3d61f6fe07fb19fd3125b76",
+    "size": 151724
+  },
+  "bounded_live_f0_checks": [
+    {
+      "function": "0xf0",
+      "header": "0xff",
+      "identity_payload_returned": false,
+      "payload": "00",
+      "result": "INVALID_PARAM",
+      "result_status": "0x01"
+    },
+    {
+      "function": "0xf0",
+      "header": "0x00",
+      "identity_payload_returned": false,
+      "payload": "00",
+      "result": "INVALID_PARAM",
+      "result_status": "0x01"
+    }
+  ],
+  "conclusion": "runtime application is cfs0_000_113; exact cfs0_050_G30/G32 boot hardware remains unknown",
+  "date": "2026-10-02",
+  "live_application": {
+    "boot_hardware": null,
+    "matched_application": "cfs0_000_113",
+    "version_sn": "1.1.3"
+  },
+  "safety": {
+    "address_assignment_performed": false,
+    "bootloader_entry_performed": false,
+    "erase_performed": false,
+    "firmware_flash_performed": false,
+    "motor_parameter_write_performed": false,
+    "reset_performed": false,
+    "update_request_performed": false
+  },
+  "schema": 1,
+  "scope": "K2 Pro CFS 1.1.3 read-only identity boundary",
+  "stock_updater_context": {
+    "a0_reproduced_live": false,
+    "exact_identity_query": "F0/00",
+    "position": "after stock discovery/address-management including A1/A0",
+    "reason": "A0 changes RS-485 address state and is outside read-only status probing"
+  }
+}
