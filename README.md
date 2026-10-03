@@ -91,6 +91,14 @@ For a live CFS query, first release the RS-485 port from Klipper and then explic
 python -m k2fw probe-cfs --port /dev/ttyUSB2 --exclusive
 ```
 
+For the separate **state-changing but non-flash** loader identity/sector probe, Kalico must already have released the port and exactly one CFS must be connected:
+
+```bash
+python -m k2fw probe-cfs-loader   --exclusive   --single-cfs   --ack-state-change   --printer-safe-confirmed
+```
+
+This command is guarded by a TX allowlist and mandatory application restore/verification. It has not yet been executed on the development printer.
+
 See `docs/LIVE_READ_ONLY_STATUS.md` for the validated live probes, `docs/MANIFEST_COMPARISON.md` for live-vs-manifest comparison, `docs/DIRECT_MCU_UPDATE_PROTOCOL.md` for the recovered Main/Nozzle serial protocol, `docs/STOCK_RESET_ORCHESTRATION.md` for the stock power/reset boundaries, `docs/STOCK_UPDATE_PATH.md` for the stock orchestration, `docs/PERIPHERAL_GENERATIONS.md` for the old/new device deltas and `docs/SAFETY.md` for the validation gates required before write support is enabled.
 
 ## Project relationship

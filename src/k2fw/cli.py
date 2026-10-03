@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from .cfs_loader import inspect_cfs_loader_probe
+from .cfs_loader import inspect_cfs_loader_probe, probe_cfs_loader_live
 from .live import query_klipper_mcus, query_motor_runtime_versions, query_printer_status
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .mcu_update import inspect_mcu_update
@@ -66,6 +66,32 @@ def cmd_probe_cfs(args: argparse.Namespace) -> int:
     result = probe_cfs_version(
         args.port,
         address=args.address,
+        baud=args.baud,
+        timeout=args.timeout,
+    )
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_probe_cfs_loader(args: argparse.Namespace) -> int:
+    missing = []
+    if not args.exclusive:
+        missing.append("--exclusive")
+    if not args.single_cfs:
+        missing.append("--single-cfs")
+    if not args.ack_state_change:
+        missing.append("--ack-state-change")
+    if not args.printer_safe_confirmed:
+        missing.append("--printer-safe-confirmed")
+    if missing:
+        raise ValueError(
+            "live CFS loader probing is state-changing and requires explicit "
+            "confirmation flags: " + ", ".join(missing)
+        )
+
+    result = probe_cfs_loader_live(
+        args.port,
+        assigned_address=args.address,
         baud=args.baud,
         timeout=args.timeout,
     )
@@ -188,6 +214,42 @@ def build_parser() -> argparse.ArgumentParser:
     )
     probe.add_argument("-o", "--output", help="write JSON result to this path")
     probe.set_defaults(func=cmd_probe_cfs)
+
+    probe_loader = sub.add_parser(
+        "probe-cfs-loader",
+        help=(
+            "live non-flash CFS loader identity/sector probe with mandatory "
+            "application restore"
+        ),
+    )
+    probe_loader.add_argument("--port", default="/dev/ttyUSB2")
+    probe_loader.add_argument("--address", type=int, default=1)
+    probe_loader.add_argument("--baud", type=int, default=230400)
+    probe_loader.add_argument("--timeout", type=float, default=1.0)
+    probe_loader.add_argument(
+        "--exclusive",
+        action="store_true",
+        help="confirm Klipper/other consumers have released the RS-485 port",
+    )
+    probe_loader.add_argument(
+        "--single-cfs",
+        action="store_true",
+        help="confirm exactly one CFS is connected because loader entry is broadcast",
+    )
+    probe_loader.add_argument(
+        "--ack-state-change",
+        action="store_true",
+        help="acknowledge loader entry, temporary A0 assignment and app restore",
+    )
+    probe_loader.add_argument(
+        "--printer-safe-confirmed",
+        action="store_true",
+        help="confirm printer is idle and all heater targets are zero",
+    )
+    probe_loader.add_argument(
+        "-o", "--output", help="write JSON result to this path"
+    )
+    probe_loader.set_defaults(func=cmd_probe_cfs_loader)
 
     inspect_loader = sub.add_parser(
         "inspect-cfs-loader-probe",

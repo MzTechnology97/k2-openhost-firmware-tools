@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "feature": "guarded live CFS loader probe",
+  "live_execution_on_development_printer": false,
+  "mandatory_cli_confirmations": [
+    "--exclusive",
+    "--single-cfs",
+    "--ack-state-change",
+    "--printer-safe-confirmed"
+  ],
+  "transport_guards": {
+    "port_owner_check_before_open": true,
+    "hard_tx_allowlist": true,
+    "allowed": [
+      "special 0x56 loader entry",
+      "A1 discover",
+      "A0 assign",
+      "A2 mode query",
+      "F0/00 boot identity",
+      "F0/03 sector token",
+      "F0/02 start application",
+      "0B/01 loader-to-app fallback"
+    ],
+    "explicitly_rejected": [
+      "F0/06 erase",
+      "F0/01 update request",
+      "application length",
+      "application data",
+      "unrelated CFS commands"
+    ]
+  },
+  "restore_policy": {
+    "runs_from_finally_after_loader_entry": true,
+    "primary": "F0/02 -> settle -> A0 -> A2 mode=application",
+    "fallback": "0B/01 -> settle -> A0 -> A2 mode=application",
+    "success_requires_final_app_mode": true
+  },
+  "validation": {
+    "full_test_suite": "63 passed",
+    "negative_cli_guard_test": "pass",
+    "destructive_symbol_check": "pass",
+    "sensitive_data_check": "pass"
+  },
+  "write_enabled": false,
+  "flash_allowed": false
+}

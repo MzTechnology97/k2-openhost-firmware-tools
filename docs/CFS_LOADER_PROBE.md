@@ -90,3 +90,59 @@ flash_allowed = false
 ```
 
 The A0 template deliberately contains a dummy UniID and cannot be copied as a live assignment transaction without replacing it with the discovered identity.
+
+## Guarded live implementation
+
+The live implementation is now present as:
+
+```bash
+python -m k2fw probe-cfs-loader   --exclusive   --single-cfs   --ack-state-change   --printer-safe-confirmed
+```
+
+It remains intentionally difficult to invoke accidentally. All four flags are mandatory before the serial port is opened:
+
+- `--exclusive`: the operator confirms Klipper and every other consumer released the RS-485 port;
+- `--single-cfs`: exactly one CFS is connected, because loader entry is a broadcast operation;
+- `--ack-state-change`: the operator acknowledges loader entry, temporary A0 addressing and application restore;
+- `--printer-safe-confirmed`: the printer is idle and every heater target is zero.
+
+The serial transport performs a second independent exclusivity check against `/proc/*/fd` before opening the port.
+
+### Hard command allowlist
+
+Every live TX frame passes through a dedicated allowlist. The live probe accepts only:
+
+```text
+special 0x56 loader entry
+A1 discovery
+A0 address assignment
+A2 identity/mode query
+F0/00 boot identity
+F0/03 sector token
+F0/02 start application
+0B/01 Jacob-compatible loader -> app fallback
+```
+
+It rejects `F0/06` erase, `F0/01` update request, application-length packets and arbitrary application-data frames before they reach the serial writer.
+
+### Restore guarantee
+
+Once loader entry has been emitted, application restore runs from a `finally` block even when identity or sector probing fails.
+
+The primary restore path is:
+
+```text
+F0/02 -> wait -> A0 restore address -> A2 verify mode=application
+```
+
+If that cannot be verified, the code tries the Jacob-compatible fallback:
+
+```text
+0B/01 -> wait -> A0 restore address -> A2 verify mode=application
+```
+
+A live probe is not considered successful unless the final A2 verification reports `mode=0`.
+
+The implementation is covered with simulated transport tests for successful probing, identity-query failure, failed F0/02 restore, fallback through 0B/01, invalid loader mode and destructive-command rejection.
+
+At this stage the live command exists but has **not** been executed on the development K2 Pro.

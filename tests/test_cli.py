@@ -59,3 +59,27 @@ def test_inspect_mcu_update_sector_token_is_explicit_and_optional():
         ]
     )
     assert args.sector_token == 0x04
+
+def test_probe_cfs_loader_requires_all_explicit_safety_flags():
+    args = build_parser().parse_args(["probe-cfs-loader"])
+    assert args.exclusive is False
+    assert args.single_cfs is False
+    assert args.ack_state_change is False
+    assert args.printer_safe_confirmed is False
+
+    args = build_parser().parse_args(
+        [
+            "probe-cfs-loader",
+            "--exclusive",
+            "--single-cfs",
+            "--ack-state-change",
+            "--printer-safe-confirmed",
+        ]
+    )
+    assert args.command == "probe-cfs-loader"
+    assert args.exclusive is True
+    assert args.single_cfs is True
+    assert args.ack_state_change is True
+    assert args.printer_safe_confirmed is True
+    assert args.port == "/dev/ttyUSB2"
+    assert args.address == 1
