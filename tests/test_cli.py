@@ -19,3 +19,12 @@ def test_status_manifest_option_is_explicit_and_optional():
 
     args = build_parser().parse_args(["status", "--manifest", "firmware.json"])
     assert args.manifest == "firmware.json"
+
+def test_inspect_update_sector_token_is_explicit_and_optional():
+    args = build_parser().parse_args(["inspect-update", "fw.bin"])
+    assert args.sector_token is None
+
+    args = build_parser().parse_args(
+        ["inspect-update", "fw.bin", "--sector-token", "0xc1"]
+    )
+    assert args.sector_token == "0xc1"

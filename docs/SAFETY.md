@@ -36,6 +36,10 @@ The stock updater's `F0/00` command is documented as protocol evidence but is no
 
 For CFS 1.1.3, bounded `F0/00` probes with both tested headers returned `INVALID_PARAM`. Stock exact-identity discovery proceeds through A1/A0 address management; because A0 changes bus address state, the read-only tooling does not reproduce it. Future CFS write support must obtain the exact boot/hardware variant from a non-mutating source or require explicit, independently verified target provenance.
 
+## Interrupted RS-485 update risk
+
+Static recovery now shows that a stock RS-485 target reaches `update_end` only when the `app_data` receive handler sees `DONE`. If transfer exits before that transition, `mcu_util_485` marks the device update as failed and the later `start_app` loop skips that device. This makes proven updater re-entry/recovery mandatory before K2-OpenHost can expose any RS-485 write command.
+
 ## Repository contents
 
 Do not commit Creality `.bin`, `.so`, OTA images, serial numbers or device-specific secrets. Commit only independently written code, documentation, non-sensitive version metadata and cryptographic hashes.

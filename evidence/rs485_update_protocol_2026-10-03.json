@@ -1,51 +1,133 @@
 {
-  "schema": 1,
+  "schema": 2,
   "date": "2026-10-03",
-  "scope": "static recovery of Creality mcu_util_485 update state machine",
+  "scope": "static recovery of Creality mcu_util_485 F0 receive/update state machine",
   "sources": {
     "old_host_release": "1.1.0.94",
     "new_host_release": "1.1.6.7.2",
-    "method": "static decompilation and binary string analysis",
+    "method": "ELF table extraction, forced Ghidra decompilation, ARM disassembly and binary string analysis",
     "live_update_commands_sent": false
   },
-  "command": "0xf0",
+  "rx_dispatch": {
+    "new": {
+      "0xa1": "0x12ad4",
+      "0xa0": "0x12894",
+      "0xa2": "0x125b4",
+      "0xf0": "0x11eac"
+    },
+    "old": {
+      "0xa1": "0x128a4",
+      "0xa0": "0x12680",
+      "0xa2": "0x11eac",
+      "0xf0": "0x12174"
+    }
+  },
+  "response_codes": {
+    "0x1f": "NACK",
+    "0x20": "DONE",
+    "0x21": "FAIL",
+    "0x75": "ACK",
+    "0xff": "NONE"
+  },
+  "states": {
+    "3": "get_version",
+    "4": "get_sector_size",
+    "5": "erase_flash",
+    "6": "update_request",
+    "7": "app_len",
+    "8": "app_data",
+    "9": "update_end",
+    "10": "start_app",
+    "11": "app_run"
+  },
   "recovered_sequence": [
-    {"state": "get_version", "payload_prefix": "00"},
-    {"state": "erase_flash", "payload_prefix": "03"},
-    {"state": "update_request", "payload_prefix": "06"},
-    {"state": "app_stream_begin", "payload_prefix": "01"},
-    {"state": "app_len", "encoding": "little-endian uint32"},
-    {"state": "app_data", "max_read_bytes": 255},
-    {"state": "update_end", "payload_prefix": "02"},
-    {"state": "start_app", "transmitted_subcommand": null}
+    {
+      "state": 3,
+      "name": "get_version",
+      "tx_payload": "00",
+      "rx": "25-byte hardware-application identity"
+    },
+    {
+      "state": 4,
+      "name": "get_sector_size",
+      "tx_payload": "03",
+      "rx": "one-byte sector token"
+    },
+    {
+      "state": 5,
+      "name": "erase_flash",
+      "tx_payload": "06",
+      "rx": "status byte logged"
+    },
+    {
+      "state": 6,
+      "name": "update_request",
+      "tx_payload": "01",
+      "rx_transition": "ACK -> state 7"
+    },
+    {
+      "state": 7,
+      "name": "app_len",
+      "tx_payload": "little-endian uint32 firmware length",
+      "rx_transition": "ACK -> state 8"
+    },
+    {
+      "state": 8,
+      "name": "app_data",
+      "tx_payload": "raw firmware chunk",
+      "rx_transition": "ACK -> state 8; DONE -> state 9"
+    },
+    {
+      "state": 9,
+      "name": "update_end",
+      "tx_payload": null,
+      "entry": "final app_data DONE response"
+    },
+    {
+      "state": 10,
+      "name": "start_app",
+      "tx_payload": "02",
+      "rx_transition": "ACK -> state 11"
+    },
+    {
+      "state": 11,
+      "name": "app_run",
+      "tx_payload": null
+    }
   ],
-  "observed_transport": {
-    "retry_limit": 3,
-    "normal_timeout_ms": 500,
-    "address_setup_timeout_ms": 1500
+  "transport": {
+    "retry_limit_observed": 3,
+    "normal_timeout_ms_observed": 500,
+    "retry_trigger": "timeout/no response rather than generic retry-on-NACK"
   },
   "chunking": {
-    "max_bytes": 255,
-    "first_read_rule": "if firmware_size % 4 != 0: (remainder * 0xfc) & 0xff; otherwise 0xff",
-    "first_read_sizes_by_remainder": {"0": 255, "1": 252, "2": 248, "3": 244}
+    "buffer_bytes": 255,
+    "frame_payload_limit": 252,
+    "source": "signed one-byte get_sector_size response",
+    "formula": "if int8(token) < 0: uint8(int8(token) * 0xfc); zero is explicitly invalid; positive token reaches zero-length read",
+    "development_cfs_sector_token": null,
+    "chunk_count_for_real_cfs": null,
+    "reason": "sector token has not been captured in updater state"
   },
   "real_cfs_1_1_6_7_2": {
     "artifact": "cfs0_050_G30-cfs0_000_150.bin",
     "size": 175104,
-    "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3",
-    "chunk_count": 687,
-    "first_chunk": 255,
-    "last_chunk": 174
+    "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3"
   },
   "old_vs_new": {
-    "core_f0_update_sequence_changed": false,
-    "notable_change": "new updater includes device type 10 in paths where old updater only handled type 1"
+    "f0_receive_state_machine_equivalent": true,
+    "notable_change": "new updater includes device type 10 in selected paths where old updater only handled type 1"
   },
-  "unresolved": [
-    "exact receive ACK/status semantics for every update state",
-    "whether start_app is implicit after update_end or driven by a distinct response transition",
-    "interrupted-update recovery and re-entry behavior"
-  ],
+  "interrupted_transfer": {
+    "success_condition": "state reaches 9/update_end via DONE while in app_data",
+    "on_failure": "device update status is set to failed",
+    "start_app_after_failed_data": false,
+    "reentry_recovery_proven": false
+  },
+  "correction": {
+    "supersedes_intermediate_mapping": true,
+    "note": "F0/03 is get_sector_size, F0/06 is erase_flash, F0/01 is update_request, F0/02 is start_app; chunk sizing comes from the returned sector token, not firmware-size remainder"
+  },
   "write_enabled": false,
   "flash_allowed": false
 }

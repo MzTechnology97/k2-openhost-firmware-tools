@@ -77,7 +77,7 @@ For Main and Nozzle, `status` keeps the live Kalico identity separate from the s
 
 With `--manifest`, the live report is compared against an explicitly selected firmware manifest. Main/Nozzle can resolve their unique F012 package artifact while still reporting `runtime_verified=false`; motors and CFS remain `hardware-unresolved` when only an application fingerprint is known. The comparison never sets `update_required=true` or `flash_allowed=true` without exact live hardware identity. See `docs/MANIFEST_COMPARISON.md`.
 
-Phase 3 now also includes an offline RS-485 update inspector. Static recovery of both stock `mcu_util_485` generations identifies the core `F0` sequence (`00` version, `03` erase, `06` update request, `01` stream begin, 32-bit application length, firmware data, `02` update end) and the stock 255-byte chunk schedule. `inspect-update` performs no serial I/O and cannot flash. See `docs/RS485_UPDATE_PROTOCOL.md`.
+Phase 3 now also includes an offline RS-485 update inspector. Forced decompilation of the stock `F0` receive handler corrected the exact sequence: `00` get-version, `03` get-sector-size, `06` erase, `01` update-request, raw 32-bit application length, firmware data, then `02` start-app after the final data reply reaches `DONE`. Chunk size is derived from the one-byte sector token returned by the target; the inspector does not invent a schedule when that runtime token is unknown. `inspect-update` performs no serial I/O and cannot flash. See `docs/RS485_UPDATE_PROTOCOL.md`.
 
 For a live CFS query, first release the RS-485 port from Klipper and then explicitly acknowledge exclusive ownership:
 

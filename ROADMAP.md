@@ -36,13 +36,17 @@ Still required:
 
 - direct MCU stock version request `00 ff` and 25-byte identity response: **recovered statically**;
 - RS-485 updater-stage version request `F0/00`: **recovered statically in both compared updater generations**;
-- RS-485 core update state order recovered from both `mcu_util_485` generations: `F0/00` version, `F0/03` erase, `F0/06` update request, `F0/01` stream begin, little-endian application length, firmware data, `F0/02` update end;
-- stock data chunk schedule recovered: maximum 255 bytes, with first-read alignment rule based on `firmware_size % 4`;
-- old/new comparison completed for the core path: wire sequence is structurally unchanged; the newer updater extends selected handling from device type 1 to types 1/10;
+- RS-485 F0 receive dispatcher and embedded state table recovered from both `mcu_util_485` generations;
+- corrected core update sequence: `F0/00` get-version, `F0/03` get-sector-size, `F0/06` erase, `F0/01` update-request, raw little-endian application length, firmware data, receive-side `DONE -> update_end`, then `F0/02` start-app;
+- embedded F0 response codes recovered: `1F=NACK`, `20=DONE`, `21=FAIL`, `75=ACK`, `FF=NONE`;
+- ACK transitions recovered: update-request -> app-len -> app-data; app-data ACK loops, DONE reaches update-end; start-app ACK reaches app-run;
+- chunk-size calculation recovered as a function of the signed one-byte sector token returned by `get_sector_size`; the development CFS token is still unknown, so no chunk count is claimed;
+- interrupted data behavior recovered: if state 9/update-end is not reached, stock marks the device failed and skips its later start-app command;
+- old/new comparison completed for the core F0 path: receive-state semantics are equivalent; the newer updater extends selected handling from device type 1 to types 1/10;
 - offline `k2fw inspect-update` planner implemented with no serial writer and permanent `write_enabled=false` / `flash_allowed=false`;
 - recover the remaining serial MCU update frame sequence from `mcu_util`;
-- recover exact RS-485 ACK/status semantics and the `update_end` -> `start_app/app_run` transition;
-- identify interrupted-update recovery/re-entry behavior;
+- determine the real CFS sector token without unsafe mutation, or capture it on recoverable hardware;
+- prove updater re-entry/recovery after interrupted erase/data transfer;
 - implement remaining frame codecs with unit tests and captured fixtures;
 - identify recovery/startup commands for interrupted updates.
 

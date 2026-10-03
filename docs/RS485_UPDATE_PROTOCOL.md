@@ -4,56 +4,137 @@ This document records static recovery of the Creality `mcu_util_485` update path
 
 No update command described here was sent to the development printer.
 
-## Recovered state order
+## RX dispatch table
 
-Both updater generations use RS-485 command `0xF0` for the updater-stage protocol. Binary strings provide the stock state names and decompilation correlates them with the transmitted payloads:
+The newer updater dispatch table is:
 
-| State | Recovered request |
+| Command | Handler |
 | --- | --- |
-| `get_version` | `F0 / 00` |
-| `erase_flash` | `F0 / 03` |
-| `update_request` | `F0 / 06` |
-| stream begin | `F0 / 01` |
-| `app_len` | 32-bit little-endian firmware size |
-| `app_data` | firmware bytes, at most 255 per read |
-| `update_end` | `F0 / 02` |
-| `start_app` / `app_run` | receive-side states are visible, but a distinct transmitted start-app subcommand has not yet been proven |
+| `0xA1` | discovery/device-info handler |
+| `0xA0` | address-assignment handler |
+| `0xA2` | device-info handler |
+| `0xF0` | updater-state response handler |
 
-The stock sender retries the relevant `F0` operations up to three times with a 500 ms response timeout.
+The older updater has the same four command classes and an equivalent `0xF0` state handler.
 
-## Firmware chunking
+## Stock updater states
 
-The stock updater uses a 255-byte buffer. Its first file read depends on `firmware_size % 4`:
+The state-name table is embedded directly in the binary:
 
-| remainder | first read |
-| ---: | ---: |
-| 0 | 255 |
-| 1 | 252 |
-| 2 | 248 |
-| 3 | 244 |
+| State | Name |
+| ---: | --- |
+| 0 | `unknown` |
+| 1 | `get_salve_info` |
+| 2 | `set_salve_addr` |
+| 3 | `get_version` |
+| 4 | `get_sector_size` |
+| 5 | `erase_flash` |
+| 6 | `update_request` |
+| 7 | `app_len` |
+| 8 | `app_data` |
+| 9 | `update_end` |
+| 10 | `start_app` |
+| 11 | `app_run` |
+| 12 | `end` |
+| 13 | `error` |
+| 14 | `timeout` |
 
-Subsequent reads request 255 bytes and the final read naturally ends at EOF.
+## Correct recovered F0 sequence
 
-For the real K2 Pro `1.1.6.7.2` CFS image `cfs0_050_G30-cfs0_000_150.bin`:
+Both analysed updater generations use command `0xF0` with the following sequence:
 
-- size: 175104 bytes;
-- SHA-256: `bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3`;
-- size remainder: 0;
-- transfer reads: 687;
-- first read: 255 bytes;
-- final read: 174 bytes.
+| State | Transmission | Receive behavior |
+| --- | --- | --- |
+| `get_version` (3) | payload `00` | copies a 25-byte hardware-application identity |
+| `get_sector_size` (4) | payload `03` | stores one returned sector token byte |
+| `erase_flash` (5) | payload `06` | status byte is logged |
+| `update_request` (6) | payload `01` | `ACK` advances to state 7 |
+| `app_len` (7) | raw 32-bit little-endian firmware length | `ACK` advances to state 8 |
+| `app_data` (8) | raw firmware chunk | `ACK` stays in state 8; `DONE` advances to state 9 |
+| `update_end` (9) | no independent transmission | reached by the final `DONE` response during data transfer |
+| `start_app` (10) | payload `02` | `ACK` advances to state 11 |
+| `app_run` (11) | no transmission | successful running state |
+
+This corrects an earlier intermediate interpretation that associated `03`, `06`, `01` and `02` with the following state names rather than the transmissions that enter them.
+
+## Response codes
+
+The stock response-name table is also embedded in the binary:
+
+| Code | Meaning |
+| ---: | --- |
+| `0x1F` | `NACK` |
+| `0x20` | `DONE` |
+| `0x21` | `FAIL` |
+| `0x75` | `ACK` |
+| `0xFF` | `NONE` |
+
+The important state transitions are therefore:
+
+```text
+update_request --ACK--> app_len
+app_len        --ACK--> app_data
+app_data       --ACK--> app_data
+app_data       --DONE-> update_end
+start_app      --ACK--> app_run
+```
+
+A `NACK` or `FAIL` does not create the successful transition.
+
+## Retry behavior
+
+The sender retries the relevant `F0` transaction up to three times when the transport helper times out waiting for a response. The receive thread posts the sender semaphore when an `F0` reply is received, including a protocol-level `NACK` or `FAIL`.
+
+This means the three-attempt loop is principally a **transport timeout retry**, not a generic retry-on-NACK mechanism. The state transition remains the authoritative indication of protocol success.
+
+## Sector token and data chunking
+
+The `get_sector_size` response is stored as a signed byte. Static ARM disassembly shows the updater computing the file-read size from that returned byte, not from `firmware_size % 4`.
+
+The recovered calculation is:
+
+```text
+signed_token = int8(sector_token)
+
+if signed_token == 0:
+    invalid sector size
+elif signed_token > 0:
+    recovered path reaches a zero-length read
+else:
+    chunk_size = uint8(signed_token * 0xFC)
+```
+
+The transfer buffer is 255 bytes, while an `F0` frame can carry at most 252 payload bytes because the stock length byte includes three protocol bytes in addition to the payload.
+
+The exact sector token returned by the development CFS boot/update state has **not** been queried. Therefore the offline inspector does not claim a chunk count unless the operator supplies a previously captured token explicitly.
+
+For example, token `0xC1` is signed `-63` and the recovered formula yields a 252-byte chunk size. This is a mathematical example of the recovered formula, not a claim that the CFS returns `0xC1`.
+
+## Interrupted transfer behavior
+
+The stock updater considers firmware-data transfer successful only if the F0 receive state reaches state 9, `update_end`, which occurs when an `app_data` response is `DONE`.
+
+If data transfer exits without reaching state 9, the stock updater marks that device's update status as failed. The later loop that sends `start_app` explicitly skips devices with failed update status.
+
+Therefore an interrupted or failed data transfer can leave a target without the normal stock `start_app` transaction. Whether the target can always be rediscovered and safely re-entered by launching the updater again remains unproven and is still a mandatory recovery gate.
 
 ## Old vs. new updater
 
-The core `F0` update sequence is structurally unchanged between the two analysed updater generations.
+The F0 receive-state transitions above are equivalent in the two analysed updater generations.
 
-The newer updater extends some device handling paths from device type `1` to `1 || 10`, including firmware selection/update handling. This is an updater capability change around the shared state machine, not evidence of a different CFS flash wire protocol.
+The newer updater additionally extends selected device handling paths from device type `1` to `1 || 10`. That change is outside the core F0 state machine.
 
 ## Offline inspector
 
-`k2fw inspect-update firmware.bin` produces a JSON description of the recovered sequence, image identity, chunk schedule and unresolved safety gates.
+`k2fw inspect-update firmware.bin` reports the recovered state machine without opening a serial device.
 
-It performs no serial I/O. The implementation deliberately contains no serial writer and always reports:
+If a sector token has been obtained independently, it can be supplied only for offline calculation:
+
+```bash
+python -m k2fw inspect-update firmware.bin --sector-token 0xc1
+```
+
+This still performs no serial I/O and always reports:
 
 ```text
 serial_io_performed: false
@@ -63,11 +144,12 @@ flash_allowed: false
 
 ## Remaining recovery gates
 
-Before writable support can be considered, Phase 3 still requires:
+Before writable support can be considered:
 
-- exact ACK/status and receive-state semantics for each update stage;
-- proof of the transition from `update_end` to `start_app/app_run`;
-- interrupted-transfer recovery and updater re-entry behavior;
-- exact CFS hardware provenance (G30 vs G32) or an equally strong operator-provided provenance rule.
+- capture or independently determine the exact CFS sector token in updater state;
+- prove updater re-entry and recovery after interruption;
+- determine whether a failed/partially erased CFS remains discoverable through the stock A1/A0 path;
+- obtain exact CFS hardware provenance (G30 vs G32), or require equally strong operator-provided provenance;
+- validate all of the above on sacrificial/recoverable hardware before exposing any write command.
 
 Until those points are proven, the recovered state machine remains inspection/test infrastructure only.
