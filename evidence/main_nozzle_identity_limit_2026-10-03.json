@@ -1,0 +1,50 @@
+{
+  "conclusion": "F012 package targets are deterministic by role, but the device loader identity was not queried from the running Kalico MCU; status keeps package provenance separate and marks it runtime_verified=false.",
+  "date": "2026-10-03",
+  "live_policy": {
+    "bootloader_entry_performed": false,
+    "firmware_flash_performed": false,
+    "loader_handshake_sent": false,
+    "mcu_reset_performed": false,
+    "runtime_bootloader_identity": null,
+    "version_00ff_sent": false
+  },
+  "schema": 1,
+  "scope": "K2 Pro F012 Main/Nozzle direct-MCU identity boundary",
+  "stock_mcu_util_protocol": {
+    "checksum_bytes": 1,
+    "handshake_expected_rx": "75",
+    "handshake_tx": "75",
+    "help_text_requires_handshake_before_get_version": true,
+    "identity_bytes": 25,
+    "stock_service_calls_startup_app_after_version_when_no_update": true,
+    "version_response_bytes": 26,
+    "version_tx": "00ff"
+  },
+  "stock_package_targets": {
+    "main": {
+      "application": "mcu0_001_000",
+      "artifact": "mcu0_120_G32-mcu0_001_000.bin",
+      "hardware": "mcu0_120_G32",
+      "identical_in_host_releases": [
+        "1.1.0.94",
+        "1.1.6.7.2"
+      ],
+      "runtime_verified": false,
+      "sha256": "bec548e946f0dd37d15f87569b23d55fb12410068f1a3ad2a95c45bf89c756d6",
+      "size": 30948
+    },
+    "nozzle": {
+      "application": "noz0_021_000",
+      "artifact": "noz0_130_G30-noz0_021_000.bin",
+      "hardware": "noz0_130_G30",
+      "identical_in_host_releases": [
+        "1.1.0.94",
+        "1.1.6.7.2"
+      ],
+      "runtime_verified": false,
+      "sha256": "6915e65bcbc543857a915ea93e4f0000879c851865efe776d83a8c9354be3208",
+      "size": 30872
+    }
+  }
+}

@@ -15,6 +15,20 @@ This page records byte-level differences between the user-supplied K2 Pro stock 
 
 The motor application change is present in both the root F012 motor images and the `F012/motor/` variants. The newer motor binaries are also larger, so the change is not only a renamed version token.
 
+The Main and Nozzle artifacts are not only name-stable but byte-identical across the compared releases:
+
+```text
+mcu0_120_G32-mcu0_001_000.bin
+  30948 bytes
+  sha256 bec548e946f0dd37d15f87569b23d55fb12410068f1a3ad2a95c45bf89c756d6
+
+noz0_130_G30-noz0_021_000.bin
+  30872 bytes
+  sha256 6915e65bcbc543857a915ea93e4f0000879c851865efe776d83a8c9354be3208
+```
+
+These are the unique F012 package targets for their roles. They are useful selection evidence, but their hardware tokens must not be described as a live bootloader identity unless the device itself (or a trusted prior stock log) supplied that identity.
+
 ### Runtime motor fingerprint
 
 Static decompilation gives an application-level fingerprint that can be read without entering the updater/bootloader path:

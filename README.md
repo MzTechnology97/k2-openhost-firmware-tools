@@ -71,6 +71,8 @@ python -m k2fw status
 
 `status` also reads the already-published CFS `VERSION_SN` state from Moonraker. On the development K2 Pro it reports application `1.1.3`, mapped to the analysed `cfs0_000_113` application. It deliberately reports the boot/hardware variant as unknown: Cortex-M analysis did not identify a runtime path that accepts the stock `F0/00` identity query, and bounded live checks with both operational and addressing headers returned `INVALID_PARAM`. Stock `mcu_util_485` reaches `F0/00` only after its A1/A0 address-management sequence; `status` does not reproduce that state-changing sequence.
 
+For Main and Nozzle, `status` keeps the live Kalico identity separate from the stock F012 package target. The analysed F012 trees contain exactly one direct-MCU artifact for each role: `mcu0_120_G32-mcu0_001_000.bin` for Main and `noz0_130_G30-noz0_021_000.bin` for Nozzle. These package targets are reported with `runtime_verified=false`; they are not presented as bootloader identities read from the device. Creality's exact 25-byte identity query belongs to the `mcu_util` loader state machine, which K2-OpenHost does not enter for status collection.
+
 For a live CFS query, first release the RS-485 port from Klipper and then explicitly acknowledge exclusive ownership:
 
 ```bash

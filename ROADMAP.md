@@ -20,13 +20,15 @@ Completed/validated:
 - live CM5 flash preflight: print state, heater targets and serial-port ownership are checked read-only; with normal Klipper running the preflight correctly blocks because `/dev/ttyUSB0..2` are owned by Klippy;
 - X/Y/E runtime firmware fingerprint via application `FLASH_PARAM` id 0 (`583/0x0247` = known `mot2_002_071`; analysed `081` uses `587/0x024b`);
 - Main MCU and Nozzle MCU running Klipper/Kalico application identity via Moonraker;
+- F012 Main/Nozzle stock package targets pinned separately from live identity (`mcu0_120_G32-mcu0_001_000` and `noz0_130_G30-noz0_021_000`), with exact sizes/SHA-256 and `runtime_verified=false`;
+- direct-MCU loader identity boundary recovered: `mcu_util` handshakes with `0x75`, reads the 25-byte identity via `00 FF`, and stock `mcu_update` later calls `startup_app`; K2-OpenHost does not move a running MCU into this path for status;
 - CFS application identity added to `k2fw status` without exposing its serial/UniID;
 - CFS 1.1.3 runtime boot/hardware investigation completed: G30/G32 is absent from the byte-identical application images, and both bounded runtime `F0/00` probes returned `INVALID_PARAM`; stock `mcu_util_485` reaches its exact identity read after A1/A0 address management, so runtime status reports the boot variant as `unknown` rather than mutating address state;
 - unified `k2fw status` for Main + Nozzle + X/Y/E + CFS.
 
 Still required:
 - identify a non-mutating source of the exact CFS boot/hardware variant (or require explicit operator provenance) before any CFS write support;
-- recover Main/Nozzle stock bootloader hardware/application identity without forcing bootloader entry;
+- find an independently recorded/non-mutating source that confirms the Main/Nozzle bootloader token pair at runtime; package targets are known, but the exact loader identity remains intentionally unqueried;
 - combine the live report with an explicitly selected local firmware tree.
 
 ## Phase 3 — stock update protocol recovery

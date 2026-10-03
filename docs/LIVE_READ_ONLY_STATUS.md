@@ -17,6 +17,31 @@ Validated development-printer result:
 
 These are running Klipper/Kalico application identities, not stock bootloader hardware/application tokens. `bootloader_version` is therefore reported as `null` rather than guessed.
 
+### F012 stock package targets vs. live identity
+
+The two analysed K2 Pro F012 firmware trees (`1.1.0.94` and `1.1.6.7.2`) each contain exactly one direct-MCU artifact for the Main role and one for the Nozzle role:
+
+| Role | Stock package target | Size | SHA-256 |
+| --- | --- | ---: | --- |
+| Main | `mcu0_120_G32-mcu0_001_000.bin` | 30948 B | `bec548e946f0dd37d15f87569b23d55fb12410068f1a3ad2a95c45bf89c756d6` |
+| Nozzle | `noz0_130_G30-noz0_021_000.bin` | 30872 B | `6915e65bcbc543857a915ea93e4f0000879c851865efe776d83a8c9354be3208` |
+
+The hashes are identical in both compared host releases. Static string inspection of the images exposes the application tokens `mcu0_001_000` / `noz0_021_000` and the `CanBoot!` marker, but not an independent copy of the G32/G30 hardware token.
+
+`k2fw status` therefore includes these values only under `stock_package_candidate`, with `runtime_verified=false`. This says “Creality ships this unique target for F012 and this role”; it does **not** say “the running bootloader returned this identity”.
+
+### Why the exact stock identity is not queried live
+
+Static recovery of `mcu_util` shows the direct-MCU state machine:
+
+- handshake phase sends `0x75` and expects `0x75`;
+- version phase sends `00 FF`;
+- the version response is 26 bytes: 25 bytes of hardware/application identity plus checksum;
+- `mcu_util --get-version` is documented by Creality as requiring the loader handshake;
+- the stock `mcu_update` service runs the handshake before version comparison and, when no update is needed, explicitly calls `startup_app`.
+
+This is a loader/update lifecycle, not the normal Klipper application protocol. Obtaining the stock token from a running K2-OpenHost Main/Nozzle would therefore require leaving the current application path or relying on a previously recorded stock result. Neither is done by `k2fw status`.
+
 ## X/Y/E closed-loop motors
 
 The normal motor application exposes `flash_param_version` as parameter id 0. `k2fw probe-motors` asks the existing Kalico motor transport to read the live and flash-backed value; it does not open the RS-485 device behind Kalico and does not write/apply/save any parameter.

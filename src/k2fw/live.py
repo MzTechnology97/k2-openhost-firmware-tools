@@ -9,6 +9,34 @@ from urllib.request import Request, urlopen
 KLIPPER_MCU_OBJECTS = ("mcu", "mcu nozzle_mcu")
 MOTOR_AXES = ("x", "y", "e")
 
+# F012 contains exactly one stock direct-MCU artifact for each of these roles
+# in both analysed K2 Pro host releases.  These are package targets, not live
+# bootloader identities: the running Kalico MCU protocol does not expose the
+# Creality boot/application token pair.
+STOCK_F012_DIRECT_MCU_TARGETS = {
+    "main": {
+        "hardware": "mcu0_120_G32",
+        "application": "mcu0_001_000",
+        "artifact": "mcu0_120_G32-mcu0_001_000.bin",
+        "size": 30948,
+        "sha256": "bec548e946f0dd37d15f87569b23d55fb12410068f1a3ad2a95c45bf89c756d6",
+    },
+    "nozzle": {
+        "hardware": "noz0_130_G30",
+        "application": "noz0_021_000",
+        "artifact": "noz0_130_G30-noz0_021_000.bin",
+        "size": 30872,
+        "sha256": "6915e65bcbc543857a915ea93e4f0000879c851865efe776d83a8c9354be3208",
+    },
+}
+
+DIRECT_MCU_BOOT_IDENTITY_REASON = (
+    "Creality mcu_util obtains the 25-byte hardware/application identity only "
+    "through its loader handshake/version state machine; stock mcu_update then "
+    "runs startup_app. k2fw does not reset or move a running Kalico MCU into "
+    "that loader path for status collection"
+)
+
 # Exact constants recovered from the two K2 Pro motor applications analysed
 # for this project.  Other firmware families may legitimately use other values.
 KNOWN_MOTOR_FLASH_PARAM_VERSIONS = {
@@ -68,6 +96,15 @@ def _object_status(
 def normalize_klipper_mcu(name: str, raw: dict[str, Any]) -> dict[str, Any]:
     constants = raw.get("mcu_constants") or {}
     label = "main" if name == "mcu" else "nozzle"
+    package = dict(STOCK_F012_DIRECT_MCU_TARGETS[label])
+    package.update({
+        "printer_model": "F012",
+        "selection_basis": (
+            "unique stock artifact for this role in the analysed F012 "
+            "1.1.0.94 and 1.1.6.7.2 firmware trees"
+        ),
+        "runtime_verified": False,
+    })
     return {
         "device": label,
         "object": name,
@@ -78,6 +115,8 @@ def normalize_klipper_mcu(name: str, raw: dict[str, Any]) -> dict[str, Any]:
         "build_machine_uid": constants.get("build_machine_uid"),
         "identity_scope": "running Klipper/Kalico application",
         "bootloader_version": None,
+        "bootloader_identity_reason": DIRECT_MCU_BOOT_IDENTITY_REASON,
+        "stock_package_candidate": package,
         "write_enabled": False,
     }
 

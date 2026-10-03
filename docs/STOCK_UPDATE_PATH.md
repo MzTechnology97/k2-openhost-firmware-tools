@@ -40,6 +40,17 @@ mcu_util -i <nozzle tty> -e           exit transparent mode
 
 Static decompilation confirms that the stock direct-MCU version request transmits bytes `00 ff`. The receive path expects 26 bytes: a 25-byte combined hardware/application identity followed by the utility's one-byte checksum. This is part of the stock updater/bootloader protocol; K2-OpenHost does not force Main or Nozzle into bootloader mode merely to obtain a live status report.
 
+The recovered state machine also shows that the handshake phase sends one byte `0x75` and expects `0x75` before progressing to the version state. Creality's own help text describes `--get-version` as “need handshake first”. In the stock service, the handshake is performed during the early `mcu_update` lifecycle; after version comparison, if no flash is needed, the service explicitly calls `mcu_util --startup` to start the application. This makes the 25-byte identity a loader-lifecycle observation rather than a safe query to inject into the already-running Kalico serial stream.
+
+For F012, the compared firmware trees each contain one direct-MCU package target per relevant role:
+
+```text
+Main   mcu0_120_G32-mcu0_001_000.bin
+Nozzle noz0_130_G30-noz0_021_000.bin
+```
+
+Those filenames are deterministic package provenance, not substitutes for the device's 25-byte live loader response.
+
 Static strings in the utility show a staged update protocol including `update_request`, sector-size confirmation, update start, application-length confirmation and application-data transfer.
 
 The stock shell code compares the version returned by the device with the one matching `.bin` in the selected firmware directory and only flashes when the application revision differs, unless a force flag is used.
