@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "scope": "static recovery of Creality mcu_util_485 update state machine",
+  "sources": {
+    "old_host_release": "1.1.0.94",
+    "new_host_release": "1.1.6.7.2",
+    "method": "static decompilation and binary string analysis",
+    "live_update_commands_sent": false
+  },
+  "command": "0xf0",
+  "recovered_sequence": [
+    {"state": "get_version", "payload_prefix": "00"},
+    {"state": "erase_flash", "payload_prefix": "03"},
+    {"state": "update_request", "payload_prefix": "06"},
+    {"state": "app_stream_begin", "payload_prefix": "01"},
+    {"state": "app_len", "encoding": "little-endian uint32"},
+    {"state": "app_data", "max_read_bytes": 255},
+    {"state": "update_end", "payload_prefix": "02"},
+    {"state": "start_app", "transmitted_subcommand": null}
+  ],
+  "observed_transport": {
+    "retry_limit": 3,
+    "normal_timeout_ms": 500,
+    "address_setup_timeout_ms": 1500
+  },
+  "chunking": {
+    "max_bytes": 255,
+    "first_read_rule": "if firmware_size % 4 != 0: (remainder * 0xfc) & 0xff; otherwise 0xff",
+    "first_read_sizes_by_remainder": {"0": 255, "1": 252, "2": 248, "3": 244}
+  },
+  "real_cfs_1_1_6_7_2": {
+    "artifact": "cfs0_050_G30-cfs0_000_150.bin",
+    "size": 175104,
+    "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3",
+    "chunk_count": 687,
+    "first_chunk": 255,
+    "last_chunk": 174
+  },
+  "old_vs_new": {
+    "core_f0_update_sequence_changed": false,
+    "notable_change": "new updater includes device type 10 in paths where old updater only handled type 1"
+  },
+  "unresolved": [
+    "exact receive ACK/status semantics for every update state",
+    "whether start_app is implicit after update_end or driven by a distinct response transition",
+    "interrupted-update recovery and re-entry behavior"
+  ],
+  "write_enabled": false,
+  "flash_allowed": false
+}

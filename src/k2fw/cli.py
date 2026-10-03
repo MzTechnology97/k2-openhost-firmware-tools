@@ -9,6 +9,7 @@ from .live import query_klipper_mcus, query_motor_runtime_versions, query_printe
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .preflight import run_preflight
 from .rs485 import probe_cfs_version
+from .rs485_update import inspect_rs485_update
 from .selection import build_candidate_plan
 from .status_compare import compare_live_status_to_manifest
 
@@ -66,6 +67,12 @@ def cmd_probe_cfs(args: argparse.Namespace) -> int:
         baud=args.baud,
         timeout=args.timeout,
     )
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_inspect_update(args: argparse.Namespace) -> int:
+    result = inspect_rs485_update(args.firmware)
     _write_or_print(result, args.output)
     return 0
 
@@ -160,6 +167,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     probe.add_argument("-o", "--output", help="write JSON result to this path")
     probe.set_defaults(func=cmd_probe_cfs)
+
+    inspect_update = sub.add_parser(
+        "inspect-update",
+        help="inspect the recovered stock RS-485 update sequence without serial I/O",
+    )
+    inspect_update.add_argument("firmware", help="local .bin firmware image")
+    inspect_update.add_argument("-o", "--output", help="write JSON result to this path")
+    inspect_update.set_defaults(func=cmd_inspect_update)
 
     probe_mcus = sub.add_parser(
         "probe-mcus",

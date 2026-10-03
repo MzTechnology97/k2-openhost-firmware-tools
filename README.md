@@ -66,6 +66,7 @@ python -m k2fw probe-mcus
 python -m k2fw probe-motors
 python -m k2fw status
 python -m k2fw status --manifest firmware.json
+python -m k2fw inspect-update /path/to/cfs0_050_G30-cfs0_000_150.bin
 ```
 
 `probe-motors` uses the normal motor application protocol and reads parameter id 0 (`flash_param_version`) through the existing Kalico transport. On the development K2 Pro all X/Y/E controllers report `0x0247` (583), which exactly matches the analysed `mot2_002_071` image; the analysed `mot2_002_081` image uses `0x024b` (587). The mapping is intentionally limited to the known K2 Pro artifacts.
@@ -75,6 +76,8 @@ python -m k2fw status --manifest firmware.json
 For Main and Nozzle, `status` keeps the live Kalico identity separate from the stock F012 package target. The analysed F012 trees contain exactly one direct-MCU artifact for each role: `mcu0_120_G32-mcu0_001_000.bin` for Main and `noz0_130_G30-noz0_021_000.bin` for Nozzle. These package targets are reported with `runtime_verified=false`; they are not presented as bootloader identities read from the device. Creality's exact 25-byte identity query belongs to the `mcu_util` loader state machine, which K2-OpenHost does not enter for status collection.
 
 With `--manifest`, the live report is compared against an explicitly selected firmware manifest. Main/Nozzle can resolve their unique F012 package artifact while still reporting `runtime_verified=false`; motors and CFS remain `hardware-unresolved` when only an application fingerprint is known. The comparison never sets `update_required=true` or `flash_allowed=true` without exact live hardware identity. See `docs/MANIFEST_COMPARISON.md`.
+
+Phase 3 now also includes an offline RS-485 update inspector. Static recovery of both stock `mcu_util_485` generations identifies the core `F0` sequence (`00` version, `03` erase, `06` update request, `01` stream begin, 32-bit application length, firmware data, `02` update end) and the stock 255-byte chunk schedule. `inspect-update` performs no serial I/O and cannot flash. See `docs/RS485_UPDATE_PROTOCOL.md`.
 
 For a live CFS query, first release the RS-485 port from Klipper and then explicitly acknowledge exclusive ownership:
 

@@ -39,3 +39,7 @@ For CFS 1.1.3, bounded `F0/00` probes with both tested headers returned `INVALID
 ## Repository contents
 
 Do not commit Creality `.bin`, `.so`, OTA images, serial numbers or device-specific secrets. Commit only independently written code, documentation, non-sensitive version metadata and cryptographic hashes.
+
+## Offline update inspection
+
+`k2fw inspect-update` is intentionally disconnected from the serial transport. It can parse a local firmware image and reproduce the statically recovered stock state/chunk schedule, but it has no code path that opens `/dev/ttyUSB2` or sends `F0` update commands. Its output always keeps `serial_io_performed=false`, `write_enabled=false` and `flash_allowed=false`.

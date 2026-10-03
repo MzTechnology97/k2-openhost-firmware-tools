@@ -36,10 +36,14 @@ Still required:
 
 - direct MCU stock version request `00 ff` and 25-byte identity response: **recovered statically**;
 - RS-485 updater-stage version request `F0/00`: **recovered statically in both compared updater generations**;
+- RS-485 core update state order recovered from both `mcu_util_485` generations: `F0/00` version, `F0/03` erase, `F0/06` update request, `F0/01` stream begin, little-endian application length, firmware data, `F0/02` update end;
+- stock data chunk schedule recovered: maximum 255 bytes, with first-read alignment rule based on `firmware_size % 4`;
+- old/new comparison completed for the core path: wire sequence is structurally unchanged; the newer updater extends selected handling from device type 1 to types 1/10;
+- offline `k2fw inspect-update` planner implemented with no serial writer and permanent `write_enabled=false` / `flash_allowed=false`;
 - recover the remaining serial MCU update frame sequence from `mcu_util`;
-- recover the remaining RS-485 bootloader/update frame sequence from `mcu_util_485`;
-- compare old/new updater implementations (already confirmed to be different binaries);
-- implement frame codecs with unit tests and captured read-only fixtures;
+- recover exact RS-485 ACK/status semantics and the `update_end` -> `start_app/app_run` transition;
+- identify interrupted-update recovery/re-entry behavior;
+- implement remaining frame codecs with unit tests and captured fixtures;
 - identify recovery/startup commands for interrupted updates.
 
 ## Phase 4 — controlled flashing
