@@ -169,6 +169,12 @@ def inspect_device_matrix() -> dict[str, Any]:
                 "read_only_observation": True,
             },
             "live_system_startup_delay_ms": {"x": 100, "y": 100, "e": 100},
+            "live_flash_key_write_retries_num": {"x": 5, "y": 5, "e": 5},
+            "boot_parameter_consumption": (
+                "boot_key/startup-delay/retry parameters are registered by both 071 "
+                "and 081 applications; no direct application-side consumption was "
+                "identified, consistent with but not proof of loader-side use"
+            ),
             "stock_update_difference": (
                 "motors share A1/A0/F0 loader flow with CFS but do not receive the "
                 "explicit F0/06 erase command"

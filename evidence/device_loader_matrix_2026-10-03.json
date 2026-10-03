@@ -52,7 +52,13 @@
     "hardware_token_embedded": false,
     "boot_key_write_performed": false,
     "reboot_performed": false,
-    "loader_entry_performed": false
+    "loader_entry_performed": false,
+    "live_read_only_flash_key_write_retries_num": {
+      "x": 5,
+      "y": 5,
+      "e": 5
+    },
+    "boot_parameter_loader_side_use": "consistent-with-static-evidence-not-proven"
   },
   "toolhead": {
     "updater": "mcu_util",

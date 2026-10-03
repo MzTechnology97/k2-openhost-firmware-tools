@@ -25,7 +25,8 @@ The K2 Pro motor images are WCH CH32V30x / QingKe RISC-V firmware.
 - Live X/Y/E all report 583, therefore all three currently run the analysed 071 generation.
 - Read-only live X/Y/E `boot_key` is 17030 (`0x4286`) in RAM and flash.
 - Read-only live X/Y/E `system_startup_delay_ms` is 100 ms in RAM and flash.
-- Both 071 and 081 expose `boot_key`, a reboot command and flash-related strings.
+- Read-only live X/Y/E `flash_key_write_retries_num` is 5 in RAM and flash.
+- Both 071 and 081 register these boot-control parameters, while static cross-reference analysis has not identified direct application-side consumption of the values. That is consistent with loader-side use, but is not proof. The applications also expose a reboot command and flash-related strings.
 
 This supports an application/boot coordination mechanism, but does not prove that writing `boot_key=0x4286` enters the loader. No boot-key write or motor reboot has been performed.
 

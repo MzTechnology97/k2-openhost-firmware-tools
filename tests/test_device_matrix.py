@@ -34,6 +34,8 @@ def test_motor_live_observations_are_read_only_and_writes_remain_disabled():
     assert motor["live_boot_key"]["e"] == 17030
     assert motor["live_boot_key"]["read_only_observation"] is True
     assert motor["live_system_startup_delay_ms"] == {"x": 100, "y": 100, "e": 100}
+    assert motor["live_flash_key_write_retries_num"] == {"x": 5, "y": 5, "e": 5}
+    assert "loader-side use" in motor["boot_parameter_consumption"]
 
     safety = result["safety"]
     assert safety["motor_loader_entry_enabled"] is False
