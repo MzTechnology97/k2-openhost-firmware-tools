@@ -24,12 +24,13 @@ Completed/validated:
 - direct-MCU loader identity boundary recovered: `mcu_util` handshakes with `0x75`, reads the 25-byte identity via `00 FF`, and stock `mcu_update` later calls `startup_app`; K2-OpenHost does not move a running MCU into this path for status;
 - CFS application identity added to `k2fw status` without exposing its serial/UniID;
 - CFS 1.1.3 runtime boot/hardware investigation completed: G30/G32 is absent from the byte-identical application images, and both bounded runtime `F0/00` probes returned `INVALID_PARAM`; stock `mcu_util_485` reaches its exact identity read after A1/A0 address management, so runtime status reports the boot variant as `unknown` rather than mutating address state;
-- unified `k2fw status` for Main + Nozzle + X/Y/E + CFS.
+- unified `k2fw status` for Main + Nozzle + X/Y/E + CFS;
+- optional `k2fw status --manifest` comparison against an explicitly selected manifest, with exact package-provenance matching for Main/Nozzle and hardware-unresolved candidate listing for motors/CFS;
+- real `1.1.6.7.2` validation: Main/Nozzle package targets resolved, seven F012 motor candidates and two cfs0 CFS candidates remained unresolved, and every update decision stayed `null` / `flash_allowed=false`.
 
 Still required:
 - identify a non-mutating source of the exact CFS boot/hardware variant (or require explicit operator provenance) before any CFS write support;
 - find an independently recorded/non-mutating source that confirms the Main/Nozzle bootloader token pair at runtime; package targets are known, but the exact loader identity remains intentionally unqueried;
-- combine the live report with an explicitly selected local firmware tree.
 
 ## Phase 3 — stock update protocol recovery
 

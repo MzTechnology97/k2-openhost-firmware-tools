@@ -30,6 +30,8 @@ The validated X/Y/E runtime fingerprint does **not** open `/dev/ttyUSB2` directl
 
 The direct Main/Nozzle `mcu_util` identity command is also excluded from runtime probing. Its `00 FF` version request follows a loader handshake and stock `mcu_update` explicitly starts the application afterward. `k2fw status` may report the unique F012 package target for each role, but it marks that target `runtime_verified=false` and never presents it as a live bootloader read.
 
+Manifest comparison is also non-authoritative for flashing. `--manifest` only compares an operator-selected manifest with the live evidence already available. Package provenance may resolve a filename without proving the running bootloader identity, while application-only motor/CFS matches remain hardware-unresolved. The comparator never promotes these observations into a flash decision.
+
 The stock updater's `F0/00` command is documented as protocol evidence but is not exposed as the normal runtime motor probe. A live application-mode motor test produced no response, so `k2fw status` deliberately uses the validated parameter read instead.
 
 For CFS 1.1.3, bounded `F0/00` probes with both tested headers returned `INVALID_PARAM`. Stock exact-identity discovery proceeds through A1/A0 address management; because A0 changes bus address state, the read-only tooling does not reproduce it. Future CFS write support must obtain the exact boot/hardware variant from a non-mutating source or require explicit, independently verified target provenance.

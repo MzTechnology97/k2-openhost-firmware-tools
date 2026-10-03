@@ -10,6 +10,7 @@ from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .preflight import run_preflight
 from .rs485 import probe_cfs_version
 from .selection import build_candidate_plan
+from .status_compare import compare_live_status_to_manifest
 
 
 def _write_or_print(data: dict, output: str | None) -> None:
@@ -83,6 +84,10 @@ def cmd_probe_motors(args: argparse.Namespace) -> int:
 
 def cmd_status(args: argparse.Namespace) -> int:
     result = query_printer_status(args.moonraker, timeout=args.timeout)
+    if args.manifest:
+        result = compare_live_status_to_manifest(
+            result, load_manifest(args.manifest)
+        )
     _write_or_print(result, args.output)
     return 0
 
@@ -186,6 +191,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--moonraker", default="http://127.0.0.1:7125", help="Moonraker base URL"
     )
     status.add_argument("--timeout", type=float, default=3.0)
+    status.add_argument(
+        "--manifest",
+        help=(
+            "explicit firmware manifest to compare read-only against live status; "
+            "never enables target flashing"
+        ),
+    )
     status.add_argument("-o", "--output", help="write JSON result to this path")
     status.set_defaults(func=cmd_status)
 

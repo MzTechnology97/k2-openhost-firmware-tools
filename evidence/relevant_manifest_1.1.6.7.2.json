@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "release": "1.1.6.7.2",
+  "artifact_count": 12,
+  "artifacts": [
+    {
+      "path": "cfs/cfs0_050_G30-cfs0_000_150.bin",
+      "hardware": "cfs0_050_G30",
+      "application": "cfs0_000_150",
+      "kind": "cfs",
+      "size": 175104,
+      "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3"
+    },
+    {
+      "path": "cfs/cfs0_050_G32-cfs0_000_150.bin",
+      "hardware": "cfs0_050_G32",
+      "application": "cfs0_000_150",
+      "kind": "cfs",
+      "size": 175104,
+      "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3"
+    },
+    {
+      "path": "cfs/cfs6_100_G31-cfs6_220_000.bin",
+      "hardware": "cfs6_100_G31",
+      "application": "cfs6_220_000",
+      "kind": "cfs",
+      "size": 144856,
+      "sha256": "485fc1c4356d6a4a387230bc97861de5ba40d5dbb2958ae5d3226b60aa9632e3"
+    },
+    {
+      "path": "F012/mcu0_120_G32-mcu0_001_000.bin",
+      "hardware": "mcu0_120_G32",
+      "application": "mcu0_001_000",
+      "kind": "main_mcu",
+      "size": 30948,
+      "sha256": "bec548e946f0dd37d15f87569b23d55fb12410068f1a3ad2a95c45bf89c756d6"
+    },
+    {
+      "path": "F012/mot0_022_C30-mot2_002_081.bin",
+      "hardware": "mot0_022_C30",
+      "application": "mot2_002_081",
+      "kind": "motor",
+      "size": 116412,
+      "sha256": "67b364a627c1609727a8add8237ed8e602326997af1866b34f88c7412198b3f7"
+    },
+    {
+      "path": "F012/mot1_022_C30-mot2_002_081.bin",
+      "hardware": "mot1_022_C30",
+      "application": "mot2_002_081",
+      "kind": "motor",
+      "size": 116412,
+      "sha256": "67b364a627c1609727a8add8237ed8e602326997af1866b34f88c7412198b3f7"
+    },
+    {
+      "path": "F012/mot2_022_C30-mot2_002_081.bin",
+      "hardware": "mot2_022_C30",
+      "application": "mot2_002_081",
+      "kind": "motor",
+      "size": 116412,
+      "sha256": "67b364a627c1609727a8add8237ed8e602326997af1866b34f88c7412198b3f7"
+    },
+    {
+      "path": "F012/motor/mot0_021_C30-mot2_002_081.bin",
+      "hardware": "mot0_021_C30",
+      "application": "mot2_002_081",
+      "kind": "motor",
+      "size": 116396,
+      "sha256": "92ff31301827406519ccad899125aa7895eeaefef240713b5543011bb7675826"
+    },
+    {
+      "path": "F012/motor/mot0_023_C30-mot2_002_081.bin",
+      "hardware": "mot0_023_C30",
+      "application": "mot2_002_081",
+      "kind": "motor",
+      "size": 116396,
+      "sha256": "92ff31301827406519ccad899125aa7895eeaefef240713b5543011bb7675826"
+    },
+    {
+      "path": "F012/motor/mot1_023_C30-mot2_002_081.bin",
+      "hardware": "mot1_023_C30",
+      "application": "mot2_002_081",
+      "kind": "motor",
+      "size": 116396,
+      "sha256": "92ff31301827406519ccad899125aa7895eeaefef240713b5543011bb7675826"
+    },
+    {
+      "path": "F012/motor/mot2_023_C30-mot2_002_081.bin",
+      "hardware": "mot2_023_C30",
+      "application": "mot2_002_081",
+      "kind": "motor",
+      "size": 116396,
+      "sha256": "92ff31301827406519ccad899125aa7895eeaefef240713b5543011bb7675826"
+    },
+    {
+      "path": "F012/noz0_130_G30-noz0_021_000.bin",
+      "hardware": "noz0_130_G30",
+      "application": "noz0_021_000",
+      "kind": "nozzle_mcu",
+      "size": 30872,
+      "sha256": "6915e65bcbc543857a915ea93e4f0000879c851865efe776d83a8c9354be3208"
+    }
+  ]
+}

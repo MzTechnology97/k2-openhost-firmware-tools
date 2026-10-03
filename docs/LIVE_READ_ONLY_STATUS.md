@@ -102,3 +102,9 @@ python -m k2fw status
 `probe-motors` refuses to run while homing, printing or paused. Every returned device record includes `write_enabled=false`.
 
 The separate CFS runtime probe remains available as `probe-cfs` and requires explicit exclusive ownership of `/dev/ttyUSB2`.
+
+## Compare with an explicitly selected manifest
+
+`k2fw status --manifest firmware.json` adds a read-only manifest comparison to the same live report. Main and Nozzle use their unique F012 package provenance but keep `runtime_hardware_verified=false`; motor and CFS application fingerprints only produce candidate lists until exact hardware identity is known.
+
+The comparator intentionally leaves `update_required=null` where live hardware identity is not sufficient and always returns `flash_allowed=false`. See `MANIFEST_COMPARISON.md` for the full matching policy and the validation against the extracted K2 Pro `1.1.6.7.2` firmware.
