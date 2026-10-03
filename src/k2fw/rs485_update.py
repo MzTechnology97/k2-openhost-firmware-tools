@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .manifest import parse_firmware_name
+from .cfs_image import inspect_cfs_image_layout
 from .rs485 import build_frame
 
 
@@ -191,6 +192,7 @@ def inspect_rs485_update(
             "application": parsed["application"],
             "size": len(data),
             "sha256": hashlib.sha256(data).hexdigest(),
+            "image_layout": inspect_cfs_image_layout(path),
         },
         "stock_protocol": {
             "command": CMD_STOCK_FIRMWARE,
@@ -306,9 +308,15 @@ def inspect_rs485_update(
                 "a fresh updater invocation reopens the image and seeks to offset 0, "
                 "then repeats discovery/version/sector/erase/update from the beginning"
             ),
+            "host_flash_address_control": False,
+            "host_flash_address_note": (
+                "recovered erase/update/data transactions carry no destination flash "
+                "address; placement is controlled by the peripheral loader"
+            ),
             "device_reentry_after_interruption": (
-                "not-yet-proven: static host analysis does not prove that every CFS "
-                "bootloader state remains reachable after power loss or interruption"
+                "not-yet-proven: application layout is consistent with a separate "
+                "lower-flash loader region, but static host/application analysis does "
+                "not prove loader fallback after every interrupted erase/write"
             ),
         },
         "serial_io_performed": False,

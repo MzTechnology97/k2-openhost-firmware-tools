@@ -1,4 +1,5 @@
 from pathlib import Path
+import struct
 
 import pytest
 
@@ -61,7 +62,10 @@ def test_recovered_response_state_machine():
 
 def test_offline_inspector_renders_fixed_cfs_frames_without_sending(tmp_path: Path):
     fw = tmp_path / "cfs0_050_G30-cfs0_000_150.bin"
-    fw.write_bytes(b"x" * 175104)
+    image = bytearray(175104)
+    struct.pack_into("<II", image, 0, 0x20006EE8, 0x0801A759)
+    image[0xA758:0xA75C] = b"\x12\x34\x56\x78"
+    fw.write_bytes(image)
     result = inspect_rs485_update(fw)
 
     seq = {item["stage"]: item for item in result["stock_protocol"]["sequence"]}
@@ -75,6 +79,11 @@ def test_offline_inspector_renders_fixed_cfs_frames_without_sending(tmp_path: Pa
     assert seq["start_app"]["frame_hex"] == "f7010400f00242"
     assert seq["app_data"]["frame_hex"] is None
     assert seq["app_data"]["data_frames_generated"] is False
+
+    layout = result["firmware"]["image_layout"]
+    assert layout["linked_flash"]["base"] == "0x08010000"
+    assert layout["lower_flash_region"]["bytes_before_application"] == 0x10000
+    assert result["recovery_status"]["host_flash_address_control"] is False
 
     assert result["serial_io_performed"] is False
     assert result["write_enabled"] is False

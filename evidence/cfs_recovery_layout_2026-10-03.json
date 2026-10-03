@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "scope": "static CFS application layout and recovery-boundary analysis",
+  "live_write_commands_sent": false,
+  "cfs0_images": {
+    "1.1.0.94": {
+      "g30_artifact": "cfs0_050_G30-cfs0_000_113.bin",
+      "g32_artifact": "cfs0_050_G32-cfs0_000_113.bin",
+      "g30_g32_byte_identical": true,
+      "size": 151724,
+      "sha256": "386a1106391a332e6a97803c5ce00b87b6d3ddc4c3d61f6fe07fb19fd3125b76",
+      "initial_sp": "0x20005420",
+      "reset_vector": "0x08015801",
+      "linked_application_base": "0x08010000",
+      "reset_offset": "0x5800",
+      "application_end_exclusive": "0x080350ac",
+      "bytes_below_application": 65536
+    },
+    "1.1.6.7.2": {
+      "g30_artifact": "cfs0_050_G30-cfs0_000_150.bin",
+      "g32_artifact": "cfs0_050_G32-cfs0_000_150.bin",
+      "g30_g32_byte_identical": true,
+      "size": 175104,
+      "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3",
+      "initial_sp": "0x20006ee8",
+      "reset_vector": "0x0801a759",
+      "linked_application_base": "0x08010000",
+      "reset_offset": "0xa758",
+      "application_end_exclusive": "0x0803ac00",
+      "bytes_below_application": 65536
+    }
+  },
+  "control_protocol": {
+    "host_supplies_flash_destination_address": false,
+    "erase_request": "F0/06 one-byte control request",
+    "update_request": "F0/01 one-byte control request",
+    "app_length": "raw little-endian uint32",
+    "app_data": "raw data chunks",
+    "interpretation": "destination/erase region is selected by peripheral loader, not by a host-supplied address"
+  },
+  "bundle_inventory": {
+    "separate_cfs0_bootloader_image_found": false,
+    "version_json_contains_boot_identity_names": [
+      "cfs0_050_G30",
+      "cfs0_050_G32"
+    ],
+    "both_map_to_same_1_1_6_7_2_application": "cfs0_000_150"
+  },
+  "conclusions": {
+    "application_is_separate_from_lower_64k_region": true,
+    "lower_64k_is_consistent_with_resident_loader": true,
+    "lower_64k_proven_to_be_bootloader_from_bundle": false,
+    "normal_host_update_can_choose_arbitrary_flash_address": false,
+    "g30_g32_application_payload_difference": false,
+    "device_loader_fallback_after_corrupt_app_proven": false,
+    "device_recovery_after_interrupted_erase_or_write_proven": false
+  },
+  "write_enabled": false,
+  "send_enabled": false,
+  "flash_allowed": false
+}

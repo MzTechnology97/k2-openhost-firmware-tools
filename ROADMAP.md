@@ -45,6 +45,9 @@ Still required:
 - old/new comparison completed for the core F0 path: receive-state semantics are equivalent; the newer updater extends selected handling from device type 1 to types 1/10;
 - offline `k2fw inspect-update` planner implemented for exact CFS images, including fixed control-frame rendering and optional trusted sector-token arithmetic, with permanent `serial_io_performed=false` / `write_enabled=false` / `send_enabled=false` / `flash_allowed=false`;
 - recover the remaining serial MCU update frame sequence from `mcu_util`;
+- static cfs0 image layout recovered: both analysed generations are linked at `0x08010000`, leaving a distinct 64 KiB lower-flash region; the stock bundle contains no separate cfs0 bootloader image;
+- G30/G32 application images are byte-identical in both analysed releases, so the board variant does not change application payload bytes, while loader identity remains a safety gate;
+- recovered stock host flow carries no flash destination address; erase/write placement is owned by the peripheral loader;
 - determine the real CFS sector token without unsafe mutation, or capture it on recoverable hardware;
 - host-side interruption behavior recovered: retries are transaction-local (max three), there is no resume offset/checkpoint, and a fresh invocation restarts the image from offset 0;
 - prove device-side CFS loader reachability/recovery after interrupted erase/data transfer on recoverable hardware;
