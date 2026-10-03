@@ -156,6 +156,14 @@ send_enabled: false
 flash_allowed: false
 ```
 
+## Interrupted transfer and host re-entry
+
+Static analysis of both stock updater generations shows no host-side resume offset or persistent transfer checkpoint. The firmware file is opened, its size is measured with an end seek, and the descriptor is explicitly returned to offset 0 before transfer.
+
+Each individual control request or data chunk is retried up to three times. If an app-data transaction exhausts those retries before the receive state reaches `update_end`, the device is marked failed and the later `start_app` request is skipped for that device.
+
+A fresh updater process therefore starts its host workflow from the beginning: discovery/address handling, version/sector query, erase/update setup and a new transfer from file offset 0. This describes the **host behavior only**. Static analysis does not prove that a CFS interrupted during erase/write will always remain reachable in a loader state, so device-side recovery after power loss or a killed update remains a hardware-validation gate.
+
 ## Remaining recovery gates
 
 Before writable support can be considered:

@@ -131,7 +131,11 @@ def test_sector_token_storage_and_recovery_gates_are_explicit(tmp_path: Path):
     assert recovery["sector_token_storage"] == "known-in-both-forced-receive-handlers"
     assert recovery["fixed_control_frames"] == "known-offline-only"
     assert "skips the later start_app" in recovery["interrupted_transfer_behavior"]
-    assert recovery["updater_reentry_after_interruption"] == "not-yet-proven"
+    assert recovery["host_resume_supported"] is False
+    assert recovery["host_file_restart_offset"] == 0
+    assert "current request/data chunk" in recovery["host_retry_scope"]
+    assert "offset 0" in recovery["host_reentry_strategy"]
+    assert recovery["device_reentry_after_interruption"].startswith("not-yet-proven")
 
 
 def test_inspector_is_cfs_only(tmp_path: Path):

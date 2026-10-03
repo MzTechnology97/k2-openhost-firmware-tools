@@ -296,7 +296,20 @@ def inspect_rs485_update(
                 "if app_data does not reach state 9/update_end, stock marks the "
                 "device failed and skips the later start_app command for that device"
             ),
-            "updater_reentry_after_interruption": "not-yet-proven",
+            "host_resume_supported": False,
+            "host_file_restart_offset": 0,
+            "host_retry_scope": (
+                "the current request/data chunk is retried up to three times; "
+                "there is no recovered host-side resume offset or checkpoint"
+            ),
+            "host_reentry_strategy": (
+                "a fresh updater invocation reopens the image and seeks to offset 0, "
+                "then repeats discovery/version/sector/erase/update from the beginning"
+            ),
+            "device_reentry_after_interruption": (
+                "not-yet-proven: static host analysis does not prove that every CFS "
+                "bootloader state remains reachable after power loss or interruption"
+            ),
         },
         "serial_io_performed": False,
         "write_enabled": False,
