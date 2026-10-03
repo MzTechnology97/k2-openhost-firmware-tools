@@ -59,3 +59,7 @@ Do not commit Creality `.bin`, `.so`, OTA images, serial numbers or device-speci
 ## CFS application / loader boundary
 
 The analysed `cfs0` application images are linked at `0x08010000`, leaving 64 KiB below the application region. The stock `mcu_util_485` update protocol does not transmit a host-selected flash destination address, so erase/write placement is controlled by the peripheral loader. This is strong evidence of an application/loader separation, but it is not proof that the loader always survives an interrupted erase/write. Hardware recovery validation is still required before CFS writes can be enabled.
+
+## CFS loader probe classification
+
+The loader identity/sector workflow is **non-flash but state-changing**. Entering loader mode, A0 address assignment, and returning to the application alter runtime state even though they do not erase/program application flash. `k2fw inspect-cfs-loader-probe` therefore renders the sequence offline only. A future live implementation must require exclusive RS-485 ownership, an idle printer, automatic application restore, post-restore A2 verification, and a hard prohibition on `F0/06`, update-request, or application-data transmission.

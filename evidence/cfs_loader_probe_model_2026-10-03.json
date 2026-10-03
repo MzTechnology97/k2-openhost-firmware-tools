@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "scope": "CFS loader/application boundary and non-flash loader probe model",
+  "development_printer_commands_sent": false,
+  "application_layout": {
+    "linked_base": "0x08010000",
+    "lower_region_bytes": 65536,
+    "interpretation": "separate lower-flash loader region strongly supported"
+  },
+  "jacob_lineage_runtime_protocol": {
+    "source": "installed K2-OpenHost box_addr.py / box_protocol.py",
+    "auto_reply_payload": "device_type, mode, 12-byte UniID",
+    "cfs_device_type": 1,
+    "mode_application": 0,
+    "mode_loader": 1,
+    "loader_to_app_command": "0B/01",
+    "loader_to_app_frame": "f7ff04000b01c8",
+    "loader_settle_seconds": 2.0
+  },
+  "independent_public_corroboration": {
+    "cfstool_repository": "Lamar1007/CFSTool",
+    "cfstool_commit": "a20798036fca1417fa7ccb4c1c0ea1e8fffee87b",
+    "active_loader_entry_frame": "f7eb03ff56cf",
+    "probe_sequence": [
+      "enter loader",
+      "A1 discover",
+      "A0 assign",
+      "F0/00 boot identity",
+      "F0/03 sector token",
+      "F0/02 start application"
+    ],
+    "vendor_module_mirror_repository": "night-gnida/k2-vanilla-public",
+    "vendor_module_mirror_commit": "834642d288daf65b59b57a56687986f76ab5b255"
+  },
+  "stock_ota_context": {
+    "klipper_stop_before_cfs_update": true,
+    "mcu_power_cycle_before_cfs_update": true,
+    "cfs_updater_runs_immediately_after_power_cycle": true
+  },
+  "confidence": {
+    "loader_mode_exists_and_is_observable": "high",
+    "loader_to_application_transition_exists": "high",
+    "bootloader_separate_from_application_payload": "high",
+    "every_cold_boot_waits_in_loader_for_fixed_window": "not-proven",
+    "corrupt_application_always_falls_back_to_reachable_loader": "not-proven",
+    "interrupted_flash_always_recoverable_without_swd": "not-proven"
+  },
+  "future_live_probe_classification": {
+    "flash_write": false,
+    "erase": false,
+    "state_changing": true,
+    "requires_exclusive_rs485": true,
+    "requires_automatic_app_restore": true,
+    "enabled": false
+  }
+}

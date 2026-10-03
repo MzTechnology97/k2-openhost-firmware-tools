@@ -40,6 +40,12 @@ Therefore G30/G32 does **not** change the application payload bytes for these tw
 
 It remains a safety-relevant loader identity because the bootloader version can still affect sector-token semantics, loader capabilities or recovery behavior even when the application payload is identical.
 
+## Loader-mode protocol corroboration
+
+The installed Jacob-lineage CFS driver adds direct protocol evidence beyond the image layout. A0/A1/A2 identity replies contain a CFS device type plus an explicit mode byte: `0=application`, `1=loader`. If enumeration finds a CFS in loader mode, the address manager starts the application and verifies that a subsequent A2 query reports application mode. The recovered loader-to-app broadcast is command `0x0B` with payload `01`.
+
+An independent community flasher reproduces the same updater loader and uses a non-flash probe sequence to read `F0/00` boot identity and `F0/03` sector token before starting the application again. This independently corroborates the application/loader split and application-only updater design. It does not by itself prove the exact cold-boot timing or guarantee fallback after every interrupted write.
+
 ## What is proven
 
 Static evidence now supports all of the following:

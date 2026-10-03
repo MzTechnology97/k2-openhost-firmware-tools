@@ -54,7 +54,10 @@ Still required:
 - static cfs0 image layout recovered: both analysed generations are linked at `0x08010000`, leaving a distinct 64 KiB lower-flash region; the stock bundle contains no separate cfs0 bootloader image;
 - G30/G32 application images are byte-identical in both analysed releases, so the board variant does not change application payload bytes, while loader identity remains a safety gate;
 - recovered stock host flow carries no flash destination address; erase/write placement is owned by the peripheral loader;
-- determine the real CFS sector token without unsafe mutation, or capture it on recoverable hardware;
+- CFS loader/application mode is now explicit in the Jacob-lineage A0/A1/A2 protocol (`0=app`, `1=loader`), with a recovered `0B/01` loader-to-app recovery path;
+- offline `inspect-cfs-loader-probe` added to render loader detection, identity/sector probing and app restore without serial I/O;
+- independent community reconstruction corroborates an active loader-entry path and application-only erase behavior; these remain external corroboration, not a substitute for our own hardware capture;
+- determine the real CFS sector token with a guarded non-flash loader probe or capture it on recoverable hardware;
 - host-side interruption behavior recovered: retries are transaction-local (max three), there is no resume offset/checkpoint, and a fresh invocation restarts the image from offset 0;
 - prove device-side CFS loader reachability/recovery after interrupted erase/data transfer on recoverable hardware;
 - implement remaining frame codecs with unit tests and captured fixtures;

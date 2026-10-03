@@ -67,6 +67,7 @@ python -m k2fw probe-motors
 python -m k2fw status
 python -m k2fw status --manifest firmware.json
 python -m k2fw inspect-update /path/to/cfs0_050_G30-cfs0_000_150.bin
+python -m k2fw inspect-cfs-loader-probe
 python -m k2fw inspect-mcu-update /path/to/mcu0_120_G32-mcu0_001_000.bin
 ```
 
@@ -78,7 +79,7 @@ For Main and Nozzle, `status` keeps the live Kalico identity separate from the s
 
 With `--manifest`, the live report is compared against an explicitly selected firmware manifest. Main/Nozzle can resolve their unique F012 package artifact while still reporting `runtime_verified=false`; motors and CFS remain `hardware-unresolved` when only an application fingerprint is known. The comparison never sets `update_required=true` or `flash_allowed=true` without exact live hardware identity. See `docs/MANIFEST_COMPARISON.md`.
 
-Phase 3 now also includes an offline CFS RS-485 update inspector. Forced decompilation of the stock `F0` receive handler corrected the exact sequence: `00` get-version, `03` get-sector-size, `06` private-flash erase, `01` update-request, raw 32-bit application length, firmware data, then `02` start-app after the final data reply reaches `DONE`. Chunk size is derived from the one-byte sector token returned by the target; the inspector does not invent a schedule when that runtime token is unknown. It can render the fixed control-frame bytes offline for review, but has no serial writer and always keeps `send_enabled=false`. See `docs/RS485_UPDATE_PROTOCOL.md`. Static CFS image-layout and recovery-boundary analysis is documented in `docs/CFS_RECOVERY_ANALYSIS.md`.
+Phase 3 now also includes an offline CFS RS-485 update inspector. Forced decompilation of the stock `F0` receive handler corrected the exact sequence: `00` get-version, `03` get-sector-size, `06` private-flash erase, `01` update-request, raw 32-bit application length, firmware data, then `02` start-app after the final data reply reaches `DONE`. Chunk size is derived from the one-byte sector token returned by the target; the inspector does not invent a schedule when that runtime token is unknown. It can render the fixed control-frame bytes offline for review, but has no serial writer and always keeps `send_enabled=false`. See `docs/RS485_UPDATE_PROTOCOL.md`. Static CFS image-layout and recovery-boundary analysis is documented in `docs/CFS_RECOVERY_ANALYSIS.md`. The explicit loader-mode protocol and the offline non-flash probe model are documented in `docs/CFS_LOADER_PROBE.md`; the live transition remains disabled.
 
 The direct Main/Nozzle serial updater has now been recovered as well. `mcu_util` uses `75` handshake and complemented control pairs `04 FB` enter-transparent, `05 FA` exit-transparent, `00 FF` get-version, `03 FC` get-sector-size, `01 FE` update-request and `02 FD` start-app; application length and data chunks carry the same one's-complement checksum. `k2fw inspect-mcu-update` renders this path offline only. See `docs/DIRECT_MCU_UPDATE_PROTOCOL.md`.
 

@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .cfs_loader import inspect_cfs_loader_probe
 from .live import query_klipper_mcus, query_motor_runtime_versions, query_printer_status
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .mcu_update import inspect_mcu_update
@@ -68,6 +69,12 @@ def cmd_probe_cfs(args: argparse.Namespace) -> int:
         baud=args.baud,
         timeout=args.timeout,
     )
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_inspect_cfs_loader_probe(args: argparse.Namespace) -> int:
+    result = inspect_cfs_loader_probe(address=args.address)
     _write_or_print(result, args.output)
     return 0
 
@@ -181,6 +188,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     probe.add_argument("-o", "--output", help="write JSON result to this path")
     probe.set_defaults(func=cmd_probe_cfs)
+
+    inspect_loader = sub.add_parser(
+        "inspect-cfs-loader-probe",
+        help=(
+            "render the non-flash CFS loader probe/recovery sequence offline; "
+            "does not open a serial port"
+        ),
+    )
+    inspect_loader.add_argument(
+        "--address", type=int, default=1,
+        help="offline assigned CFS address used only to render frame bytes",
+    )
+    inspect_loader.add_argument(
+        "-o", "--output", help="write JSON result to this path"
+    )
+    inspect_loader.set_defaults(func=cmd_inspect_cfs_loader_probe)
 
     inspect_update = sub.add_parser(
         "inspect-update",
