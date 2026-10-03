@@ -83,3 +83,7 @@ def test_probe_cfs_loader_requires_all_explicit_safety_flags():
     assert args.printer_safe_confirmed is True
     assert args.port == "/dev/ttyUSB2"
     assert args.address == 1
+
+def test_device_matrix_command_is_registered():
+    args = build_parser().parse_args(["device-matrix"])
+    assert args.command == "device-matrix"

@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "scope": "multi-device firmware loader architecture",
+  "rs485": {
+    "motor": {
+      "device_type": 2,
+      "discovery_address": "0xfd",
+      "shared_f0_loader": true,
+      "explicit_f0_06_erase": false
+    },
+    "belt": {
+      "device_type": 3,
+      "discovery_address": "0xfc"
+    },
+    "rfid": {
+      "device_type": 4,
+      "discovery_address": "0xfb"
+    },
+    "cfs": {
+      "device_type": 1,
+      "discovery_address": "0xfe",
+      "explicit_f0_06_erase": true
+    },
+    "cfs_pro": {
+      "device_type": 10,
+      "discovery_address": "0xfe",
+      "explicit_f0_06_erase": true
+    }
+  },
+  "motor": {
+    "mcu_family": "WCH CH32V30x / QingKe RISC-V",
+    "runtime_flash_param_version": {
+      "x": 583,
+      "y": 583,
+      "e": 583,
+      "application": "mot2_002_071"
+    },
+    "live_read_only_boot_key": {
+      "x": 17030,
+      "y": 17030,
+      "e": 17030,
+      "hex": "0x4286"
+    },
+    "live_read_only_startup_delay_ms": {
+      "x": 100,
+      "y": 100,
+      "e": 100
+    },
+    "package_example": "mot0_022_C30-mot2_002_081.bin",
+    "application_token_offset": "0x200",
+    "hardware_token_embedded": false,
+    "boot_key_write_performed": false,
+    "reboot_performed": false,
+    "loader_entry_performed": false
+  },
+  "toolhead": {
+    "updater": "mcu_util",
+    "target": "noz0_130_G30-noz0_021_000.bin",
+    "vector_base": "0x08000000",
+    "reset_vector": "0x080033f8",
+    "application_token_offset": "0x200",
+    "canboot_marker_offset": "0x3e0",
+    "hardware_token_embedded": false,
+    "live_loader_entry_performed": false
+  },
+  "safety": {
+    "motor_write_enabled": false,
+    "direct_mcu_write_enabled": false,
+    "flash_allowed": false
+  }
+}

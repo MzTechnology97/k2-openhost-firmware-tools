@@ -63,3 +63,9 @@ The analysed `cfs0` application images are linked at `0x08010000`, leaving 64 Ki
 ## CFS loader probe classification
 
 The loader identity/sector workflow is **non-flash but state-changing**. Entering loader mode, A0 address assignment, and returning to the application alter runtime state even though they do not erase/program application flash. `k2fw inspect-cfs-loader-probe` therefore renders the sequence offline only. The live implementation now enforces exclusive RS-485 ownership, explicit single-CFS/state-change/printer-safe acknowledgements, automatic application restore, post-restore A2 verification, and a hard TX allowlist that rejects `F0/06`, `F0/01`, application length and application-data frames. It has not yet been executed on the development printer.
+
+## Motor and Toolhead loader gates
+
+Motors share the stock `mcu_util_485` F0 loader state machine with CFS but have a different erase policy: device type 2 does not receive the explicit `F0/06` erase. X/Y/E application-level reads have confirmed `boot_key=0x4286` and `system_startup_delay_ms=100`, but K2-OpenHost must not write the boot key or reboot a motor until the loader-entry rule and recovery path are proven.
+
+Main and Toolhead/Nozzle use the separate direct `mcu_util` loader backend. Its framing is recovered offline, but the live loader-entry trigger, real sector token and interrupted-update recovery are not yet validated. No direct-MCU live loader entry or firmware write is enabled.

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .cfs_loader import inspect_cfs_loader_probe, probe_cfs_loader_live
+from .device_matrix import inspect_device_matrix
 from .live import query_klipper_mcus, query_motor_runtime_versions, query_printer_status
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .mcu_update import inspect_mcu_update
@@ -23,6 +24,11 @@ def _write_or_print(data: dict, output: str | None) -> None:
         print(output)
     else:
         sys.stdout.write(text)
+
+
+def cmd_device_matrix(args: argparse.Namespace) -> int:
+    _write_or_print(inspect_device_matrix(), args.output)
+    return 0
 
 
 def cmd_scan(args: argparse.Namespace) -> int:
@@ -152,6 +158,13 @@ def build_parser() -> argparse.ArgumentParser:
         description="K2-OpenHost peripheral firmware inspection tools",
     )
     sub = parser.add_subparsers(dest="command", required=True)
+
+    matrix = sub.add_parser(
+        "device-matrix",
+        help="show the recovered K2 firmware-device transport/update architecture",
+    )
+    matrix.add_argument("-o", "--output", help="write JSON result to this path")
+    matrix.set_defaults(func=cmd_device_matrix)
 
     scan = sub.add_parser("scan", help="inventory a local Creality firmware tree")
     scan.add_argument("root", help="firmware root, normally usr/share/klipper/fw")

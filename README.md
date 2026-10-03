@@ -45,9 +45,10 @@ This makes firmware-generation differences a credible explanation for protocol d
 
 ## Current scope
 
-The current implementation provides safe firmware-tree scanning, manifest comparison, exact target resolution, CFS probing and a live read-only status path for Main MCU, Nozzle MCU, X/Y/E closed-loop motor controllers and the CFS application. It does **not** contain a flash command.
+The current implementation provides safe firmware-tree scanning, manifest comparison, exact target resolution, a multi-device firmware architecture model, CFS probing and a live read-only status path for Main MCU, Toolhead/Nozzle MCU, X/Y/E closed-loop motor controllers and the CFS application. It does **not** contain a flash command.
 
 ```bash
+python -m k2fw device-matrix
 python -m k2fw scan /path/to/usr/share/klipper/fw -o firmware.json
 python -m k2fw compare old-manifest.json new-manifest.json
 python -m k2fw resolve firmware.json \
@@ -73,13 +74,15 @@ python -m k2fw inspect-mcu-update /path/to/mcu0_120_G32-mcu0_001_000.bin
 
 `probe-motors` uses the normal motor application protocol and reads parameter id 0 (`flash_param_version`) through the existing Kalico transport. On the development K2 Pro all X/Y/E controllers report `0x0247` (583), which exactly matches the analysed `mot2_002_071` image; the analysed `mot2_002_081` image uses `0x024b` (587). The mapping is intentionally limited to the known K2 Pro artifacts.
 
+Read-only motor probing also confirms identical X/Y/E `boot_key=17030 (0x4286)` and `system_startup_delay_ms=100`. Stock `mcu_util_485` treats motors as device type 2 on discovery group `0xFD` and uses the shared F0 loader state machine, but skips the explicit `F0/06` erase used by CFS. Motor loader entry and writes remain disabled.
+
 `status` also reads the already-published CFS `VERSION_SN` state from Moonraker. On the development K2 Pro it reports application `1.1.3`, mapped to the analysed `cfs0_000_113` application. It deliberately reports the boot/hardware variant as unknown: Cortex-M analysis did not identify a runtime path that accepts the stock `F0/00` identity query, and bounded live checks with both operational and addressing headers returned `INVALID_PARAM`. Stock `mcu_util_485` reaches `F0/00` only after its A1/A0 address-management sequence; `status` does not reproduce that state-changing sequence.
 
 For Main and Nozzle, `status` keeps the live Kalico identity separate from the stock F012 package target. The analysed F012 trees contain exactly one direct-MCU artifact for each role: `mcu0_120_G32-mcu0_001_000.bin` for Main and `noz0_130_G30-noz0_021_000.bin` for Nozzle. These package targets are reported with `runtime_verified=false`; they are not presented as bootloader identities read from the device. Creality's exact 25-byte identity query belongs to the `mcu_util` loader state machine, which K2-OpenHost does not enter for status collection.
 
 With `--manifest`, the live report is compared against an explicitly selected firmware manifest. Main/Nozzle can resolve their unique F012 package artifact while still reporting `runtime_verified=false`; motors and CFS remain `hardware-unresolved` when only an application fingerprint is known. The comparison never sets `update_required=true` or `flash_allowed=true` without exact live hardware identity. See `docs/MANIFEST_COMPARISON.md`.
 
-Phase 3 now also includes an offline CFS RS-485 update inspector. Forced decompilation of the stock `F0` receive handler corrected the exact sequence: `00` get-version, `03` get-sector-size, `06` private-flash erase, `01` update-request, raw 32-bit application length, firmware data, then `02` start-app after the final data reply reaches `DONE`. Chunk size is derived from the one-byte sector token returned by the target; the inspector does not invent a schedule when that runtime token is unknown. It can render the fixed control-frame bytes offline for review, but has no serial writer and always keeps `send_enabled=false`. See `docs/RS485_UPDATE_PROTOCOL.md`. Static CFS image-layout and recovery-boundary analysis is documented in `docs/CFS_RECOVERY_ANALYSIS.md`. The explicit loader-mode protocol and the offline non-flash probe model are documented in `docs/CFS_LOADER_PROBE.md`; the live transition remains disabled.
+Phase 3 now also includes an offline CFS RS-485 update inspector. Forced decompilation of the stock `F0` receive handler corrected the exact sequence: `00` get-version, `03` get-sector-size, `06` private-flash erase, `01` update-request, raw 32-bit application length, firmware data, then `02` start-app after the final data reply reaches `DONE`. Chunk size is derived from the one-byte sector token returned by the target; the inspector does not invent a schedule when that runtime token is unknown. It can render the fixed control-frame bytes offline for review, but has no serial writer and always keeps `send_enabled=false`. See `docs/RS485_UPDATE_PROTOCOL.md`. Static CFS image-layout and recovery-boundary analysis is documented in `docs/CFS_RECOVERY_ANALYSIS.md`. The explicit loader-mode protocol and guarded non-flash live probe are documented in `docs/CFS_LOADER_PROBE.md`. Cross-device motor/CFS/Main/Toolhead architecture is documented in `docs/FIRMWARE_DEVICE_ARCHITECTURE.md`.
 
 The direct Main/Nozzle serial updater has now been recovered as well. `mcu_util` uses `75` handshake and complemented control pairs `04 FB` enter-transparent, `05 FA` exit-transparent, `00 FF` get-version, `03 FC` get-sector-size, `01 FE` update-request and `02 FD` start-app; application length and data chunks carry the same one's-complement checksum. `k2fw inspect-mcu-update` renders this path offline only. See `docs/DIRECT_MCU_UPDATE_PROTOCOL.md`.
 
