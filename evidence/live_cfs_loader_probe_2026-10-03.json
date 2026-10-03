@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "scope": "first guarded live CFS loader probe on the development K2 Pro",
+  "preflight": {
+    "printer_state": "standby",
+    "heater_targets_zero": true,
+    "cfs_state_before": "IDLE",
+    "cfs_status_before": "OK",
+    "single_cfs_online": true,
+    "rs485_exclusive_after_klipper_stop": true
+  },
+  "live_loader_result": {
+    "probe_ok": true,
+    "hardware": "cfs0_050_G32",
+    "application": "cfs0_000_113",
+    "combined_identity": "cfs0_050_G32-cfs0_000_113",
+    "sector_token_hex": "0xe0",
+    "sector_token_signed": -32,
+    "stock_chunk_size_bytes": 128
+  },
+  "restore_observation": {
+    "f0_02_ack_received": true,
+    "a2_after_f0_02_mode": "loader",
+    "jacob_0b_01_fallback_sent": true,
+    "a2_after_0b_01_mode": "application",
+    "application_restore_verified": true,
+    "runtime_version_after_restore": "1.1.3"
+  },
+  "target_1_1_6_7_2": {
+    "hardware": "cfs0_050_G32",
+    "application": "cfs0_000_150",
+    "artifact": "cfs0_050_G32-cfs0_000_150.bin",
+    "size": 175104,
+    "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3",
+    "chunk_size_bytes": 128,
+    "chunk_count": 1368,
+    "tail_bytes": 0
+  },
+  "safety": {
+    "erase_performed": false,
+    "update_request_performed": false,
+    "application_data_sent": false,
+    "flash_allowed": false,
+    "device_serial_published": false
+  },
+  "post_probe": {
+    "klipper_active": true,
+    "printer_state": "ready",
+    "print_state": "standby",
+    "cfs_state": "IDLE",
+    "cfs_status": "OK",
+    "cfs_online": true
+  }
+}

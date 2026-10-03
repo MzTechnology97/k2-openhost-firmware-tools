@@ -146,3 +146,30 @@ A live probe is not considered successful unless the final A2 verification repor
 The implementation is covered with simulated transport tests for successful probing, identity-query failure, failed F0/02 restore, fallback through 0B/01, invalid loader mode and destructive-command rejection.
 
 At this stage the live command exists but has **not** been executed on the development K2 Pro.
+
+## First live validation on the development K2 Pro
+
+The guarded live probe was executed after the printer was confirmed standby, all heater targets were zero, exactly one CFS was online, and Klipper had released the RS-485 port.
+
+Observed loader identity:
+
+```text
+hardware    cfs0_050_G32
+application cfs0_000_113
+sector      0xE0
+chunk size  128 bytes
+```
+
+No erase, update-request or application-data transaction was emitted.
+
+The restore path exposed an important hardware-specific detail. `F0/02` returned an ACK, but after the settle delay the subsequent A2 query still reported `mode=loader`. The Jacob-compatible `0B/01` fallback was then sent, after which A2 reported `mode=application`.
+
+Therefore on this K2 Pro / CFS generation:
+
+- an `F0/02` ACK is **not sufficient evidence** that the application has actually taken control;
+- A2 mode verification is mandatory;
+- `0B/01` is a proven recovery path from loader to application on the live hardware.
+
+After the probe, the normal application `0x14` query again returned firmware 1.1.3. Klipper was restarted successfully and the printer returned to `ready/standby` with CFS `IDLE/OK`.
+
+The device serial number is intentionally omitted from repository evidence.

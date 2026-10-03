@@ -97,7 +97,7 @@ For the separate **state-changing but non-flash** loader identity/sector probe, 
 python -m k2fw probe-cfs-loader   --exclusive   --single-cfs   --ack-state-change   --printer-safe-confirmed
 ```
 
-This command is guarded by a TX allowlist and mandatory application restore/verification. It has not yet been executed on the development printer.
+This command is guarded by a TX allowlist and mandatory application restore/verification. It has now been validated on the development K2 Pro: the CFS identifies as `cfs0_050_G32-cfs0_000_113`, returns sector token `0xE0` (128-byte stock chunks), and required the Jacob `0B/01` fallback before A2 verified application mode.
 
 See `docs/LIVE_READ_ONLY_STATUS.md` for the validated live probes, `docs/MANIFEST_COMPARISON.md` for live-vs-manifest comparison, `docs/DIRECT_MCU_UPDATE_PROTOCOL.md` for the recovered Main/Nozzle serial protocol, `docs/STOCK_RESET_ORCHESTRATION.md` for the stock power/reset boundaries, `docs/STOCK_UPDATE_PATH.md` for the stock orchestration, `docs/PERIPHERAL_GENERATIONS.md` for the old/new device deltas and `docs/SAFETY.md` for the validation gates required before write support is enabled.
 

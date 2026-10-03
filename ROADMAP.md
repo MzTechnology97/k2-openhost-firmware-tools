@@ -58,7 +58,9 @@ Still required:
 - offline `inspect-cfs-loader-probe` added to render loader detection, identity/sector probing and app restore without serial I/O;
 - guarded live `probe-cfs-loader` implemented with a hard non-flash TX allowlist, mandatory four-flag acknowledgement, port-ownership check and application restore/verification in `finally`; not yet executed on the development printer;
 - independent community reconstruction corroborates an active loader-entry path and application-only erase behavior; these remain external corroboration, not a substitute for our own hardware capture;
-- determine the real CFS sector token with a guarded non-flash loader probe or capture it on recoverable hardware;
+- development CFS live identity resolved as `cfs0_050_G32-cfs0_000_113`; sector token `0xE0` resolves stock chunk size to 128 bytes;
+- 1.1.6.7.2 exact CFS target resolved to `cfs0_050_G32-cfs0_000_150.bin`, 1368 chunks of 128 bytes;
+- live restore verified: `F0/02` ACK alone did not leave loader mode, while Jacob `0B/01` transitioned to application mode; post-start A2 verification is mandatory;
 - host-side interruption behavior recovered: retries are transaction-local (max three), there is no resume offset/checkpoint, and a fresh invocation restarts the image from offset 0;
 - prove device-side CFS loader reachability/recovery after interrupted erase/data transfer on recoverable hardware;
 - implement remaining frame codecs with unit tests and captured fixtures;

@@ -175,3 +175,19 @@ Before writable support can be considered:
 - validate all of the above on sacrificial/recoverable hardware before exposing any write command.
 
 Until those points are proven, the recovered state machine remains inspection/test infrastructure only.
+
+## Live G32 sector token
+
+The guarded live loader probe on the development K2 Pro returned:
+
+```text
+boot identity  cfs0_050_G32-cfs0_000_113
+sector token   0xE0
+chunk size     128 bytes
+```
+
+For the 1.1.6.7.2 target image `cfs0_050_G32-cfs0_000_150.bin` (175104 bytes), this gives exactly 1368 application-data chunks and no partial tail.
+
+The probe did not issue erase, update request or application data.
+
+A live restore nuance is now proven: `F0/02` may ACK while A2 still reports loader mode. The updater/recovery implementation must verify application mode explicitly and may use the proven `0B/01` loader-to-app fallback before considering startup complete.

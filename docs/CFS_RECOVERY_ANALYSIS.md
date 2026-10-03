@@ -46,6 +46,16 @@ The installed Jacob-lineage CFS driver adds direct protocol evidence beyond the 
 
 An independent community flasher reproduces the same updater loader and uses a non-flash probe sequence to read `F0/00` boot identity and `F0/03` sector token before starting the application again. This independently corroborates the application/loader split and application-only updater design. It does not by itself prove the exact cold-boot timing or guarantee fallback after every interrupted write.
 
+## Live loader identity and sector token
+
+A guarded live probe has now confirmed the development K2 Pro CFS loader identity as `cfs0_050_G32` with current application `cfs0_000_113`. The loader returned sector token `0xE0`, which the recovered stock arithmetic maps to a 128-byte transfer chunk.
+
+This removes the G30/G32 ambiguity for this machine and resolves the exact 1.5.0 package target to `cfs0_050_G32-cfs0_000_150.bin`.
+
+The 1.5.0 image is 175104 bytes, therefore a stock transfer using the live G32 token consists of exactly 1368 chunks of 128 bytes with no partial tail.
+
+Live restore also showed that `F0/02` can ACK while A2 still reports loader mode. The Jacob `0B/01` command then transitioned the same device to application mode successfully. Post-command A2 verification is therefore required; ACK alone must not be treated as proof of application startup.
+
 ## What is proven
 
 Static evidence now supports all of the following:
@@ -65,7 +75,7 @@ The following remain hardware-validation gates:
 - that the loader always validates the app before jumping to it;
 - that a corrupted or partially erased application forces the loader to remain on RS-485;
 - that power loss during erase/program cannot corrupt loader metadata;
-- that G30 and G32 return the same sector token;
+- that G30 returns the same sector token as the now-confirmed G32 token `0xE0`;
 - that every interrupted update can be recovered without SWD/programmer access.
 
 For that reason `flash_allowed` remains false.
