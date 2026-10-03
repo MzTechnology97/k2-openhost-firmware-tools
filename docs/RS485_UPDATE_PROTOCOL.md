@@ -89,7 +89,7 @@ This means the three-attempt loop is principally a **transport timeout retry**, 
 
 ## Sector token and data chunking
 
-The `get_sector_size` response is stored as a signed byte. Static ARM disassembly shows the updater computing the file-read size from that returned byte, not from `firmware_size % 4`.
+The `get_sector_size` response is stored as a signed byte. Forced decompilation makes the source explicit in both generations: the old handler at `0x12174` and the new handler at `0x11eac` copy `response[9]` into the per-device sector-token field; the sender later loads that same field with `LDRSB` before the data-read loop. Static ARM disassembly therefore shows the updater computing the file-read size from that returned byte, not from `firmware_size % 4`.
 
 The recovered calculation is:
 
@@ -126,7 +126,7 @@ The newer updater additionally extends selected device handling paths from devic
 
 ## Offline inspector
 
-`k2fw inspect-update firmware.bin` reports the recovered state machine without opening a serial device.
+`k2fw inspect-update firmware.bin` reports the recovered state machine without opening a serial device. It accepts CFS images only and can render the fixed `F0` control frames for an offline address (default 1); data frames are never generated.
 
 If a sector token has been obtained independently, it can be supplied only for offline calculation:
 
@@ -134,11 +134,25 @@ If a sector token has been obtained independently, it can be supplied only for o
 python -m k2fw inspect-update firmware.bin --sector-token 0xc1
 ```
 
+
+For address 1, fixed frames include:
+
+```text
+F0/00 get-version          f7 01 04 00 f0 00 4c
+F0/03 get-sector-size      f7 01 04 00 f0 03 45
+F0/06 erase-private-flash  f7 01 04 00 f0 06 5e
+F0/01 update-request       f7 01 04 00 f0 01 4b
+F0/02 start-app            f7 01 04 00 f0 02 42
+```
+
+For the real 175104-byte `cfs0_000_150` image, the little-endian length payload is `00 ac 02 00`, producing address-1 frame `f7 01 07 00 f0 00 ac 02 00 82`. These bytes are rendered only; no send path exists.
+
 This still performs no serial I/O and always reports:
 
 ```text
 serial_io_performed: false
 write_enabled: false
+send_enabled: false
 flash_allowed: false
 ```
 

@@ -1,5 +1,5 @@
 {
-  "schema": 2,
+  "schema": 3,
   "date": "2026-10-03",
   "scope": "static recovery of Creality mcu_util_485 F0 receive/update state machine",
   "sources": {
@@ -107,7 +107,16 @@
     "formula": "if int8(token) < 0: uint8(int8(token) * 0xfc); zero is explicitly invalid; positive token reaches zero-length read",
     "development_cfs_sector_token": null,
     "chunk_count_for_real_cfs": null,
-    "reason": "sector token has not been captured in updater state"
+    "reason": "sector token has not been captured in updater state",
+    "usable_wire_range": "0xc1..0xff",
+    "signed_range": "-63..-1",
+    "simplified_formula": "chunk_size=(-signed_token)*4",
+    "example_if_token_0xc1": {
+      "chunk_size": 252,
+      "chunk_count_for_175104": 695,
+      "last_chunk_size": 216,
+      "is_hypothetical": true
+    }
   },
   "real_cfs_1_1_6_7_2": {
     "artifact": "cfs0_050_G30-cfs0_000_150.bin",
@@ -129,5 +138,46 @@
     "note": "F0/03 is get_sector_size, F0/06 is erase_flash, F0/01 is update_request, F0/02 is start_app; chunk sizing comes from the returned sector token, not firmware-size remainder"
   },
   "write_enabled": false,
-  "flash_allowed": false
+  "flash_allowed": false,
+  "sector_token_storage": {
+    "old_handler": {
+      "function": "forced_12174",
+      "function_address": "0x12174",
+      "load": "response[9]",
+      "store": "device sector-token field",
+      "disassembly": [
+        "00012278 ldrb r3,[r1,#0x9]",
+        "0001227c strb r3,[r6,#0x28]"
+      ]
+    },
+    "new_handler": {
+      "function": "forced_11eac",
+      "function_address": "0x11eac",
+      "load": "response[9]",
+      "store": "device sector-token field",
+      "disassembly": [
+        "00011fb0 ldrb r3,[r1,#0x9]",
+        "strb r3,[r6,#0x28]"
+      ]
+    },
+    "sender_load": "signed LDRSB from the same per-device field before app-data reads"
+  },
+  "fixed_address_1_control_frames": {
+    "get_version": "f7010400f0004c",
+    "get_sector_size": "f7010400f00345",
+    "erase_private_flash": "f7010400f0065e",
+    "update_request": "f7010400f0014b",
+    "app_len_175104": "f7010700f000ac020082",
+    "start_app": "f7010400f00242"
+  },
+  "offline_inspector": {
+    "cfs_only": true,
+    "fixed_control_frames_rendered": true,
+    "data_frames_generated": false,
+    "serial_io_performed": false,
+    "write_enabled": false,
+    "send_enabled": false,
+    "flash_allowed": false
+  },
+  "send_enabled": false
 }

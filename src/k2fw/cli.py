@@ -72,8 +72,11 @@ def cmd_probe_cfs(args: argparse.Namespace) -> int:
 
 
 def cmd_inspect_update(args: argparse.Namespace) -> int:
-    sector_token = int(args.sector_token, 0) if args.sector_token is not None else None
-    result = inspect_rs485_update(args.firmware, sector_token=sector_token)
+    result = inspect_rs485_update(
+        args.firmware,
+        address=args.address,
+        sector_token=args.sector_token,
+    )
     _write_or_print(result, args.output)
     return 0
 
@@ -173,12 +176,21 @@ def build_parser() -> argparse.ArgumentParser:
         "inspect-update",
         help="inspect the recovered stock RS-485 update sequence without serial I/O",
     )
-    inspect_update.add_argument("firmware", help="local .bin firmware image")
+    inspect_update.add_argument("firmware", help="local CFS .bin firmware image")
+    inspect_update.add_argument(
+        "--address",
+        type=int,
+        default=1,
+        help="offline address used only to render fixed control-frame bytes",
+    )
     inspect_update.add_argument(
         "--sector-token",
+        "--sector-code",
+        dest="sector_token",
+        type=lambda value: int(value, 0),
         help=(
-            "optional captured one-byte sector token (for example 0xc1); "
-            "never queried live by this command"
+            "optional trusted F0/03 response byte (for example 0xc1); "
+            "used only for offline chunk arithmetic"
         ),
     )
     inspect_update.add_argument("-o", "--output", help="write JSON result to this path")

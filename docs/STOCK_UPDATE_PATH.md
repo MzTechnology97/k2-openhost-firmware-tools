@@ -85,6 +85,8 @@ The stock script first performs a broadcast pass and then an update pass using t
 
 A normal-application test of `F0/00` against an X motor produced no response. On the development K2 Pro CFS 1.1.3, bounded `F0/00` tests at the already assigned address returned status `0x01` (`INVALID_PARAM`) with both operational header `0xFF` and addressing header `0x00`. No A0 address assignment was reproduced. Therefore `F0/00` is not used as a normal runtime identity API by K2-OpenHost. Live X/Y/E identification instead uses the application `FLASH_PARAM` read of parameter id 0, while the CFS runtime reports only its safe `VERSION_SN` application version.
 
+Forced receive-handler decompilation clarifies the later CFS update lifecycle: state 4 stores `response[9]` as the sector token; `F0/06` is private-flash erase; `F0/01` requests update; ACKs advance through app-length and app-data; final app-data `DONE 0x20` reaches state 9/update-end; only then does the stock sender issue `F0/02` start-app, whose `ACK 0x75` reaches state 11/app-run. The offline inspector documents/renders these fixed control frames but never transmits them.
+
 During a CFS-targeted OTA, `upgrade-server` creates `/tmp/cfs_update.json` and starts the service with `CFS=1`, causing `mcu_update` to add `-j /tmp/cfs_update.json`.
 
 ## OTA server evidence

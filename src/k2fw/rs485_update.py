@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import struct
 from pathlib import Path
 from typing import Any
 
 from .manifest import parse_firmware_name
+from .rs485 import build_frame
 
 
 CMD_STOCK_FIRMWARE = 0xF0
@@ -49,6 +51,7 @@ STATE_NAMES = {
 
 STOCK_DATA_BUFFER_SIZE = 0xFF
 STOCK_FRAME_MAX_PAYLOAD = 0xFC
+STOCK_HEADER = 0x00
 
 
 def _signed_byte(raw: int) -> int:
@@ -132,20 +135,36 @@ def stock_update_response_transition(state: int, response_code: int) -> dict[str
     }
 
 
+def _control_frame_hex(address: int, payload: bytes) -> str:
+    return build_frame(
+        address, CMD_STOCK_FIRMWARE, payload, header=STOCK_HEADER
+    ).hex()
+
+
 def inspect_rs485_update(
     firmware: str | Path,
     *,
+    address: int = 1,
     sector_token: int | None = None,
 ) -> dict[str, Any]:
     """Build an offline description of the recovered stock update sequence."""
     path = Path(firmware)
     data = path.read_bytes()
     parsed = parse_firmware_name(path.name)
+    if parsed["kind"] != "cfs" or not parsed.get("application"):
+        raise ValueError(
+            "inspect-update currently supports exact CFS firmware images only"
+        )
 
     chunking: dict[str, Any] = {
         "buffer_bytes": STOCK_DATA_BUFFER_SIZE,
         "frame_payload_limit": STOCK_FRAME_MAX_PAYLOAD,
-        "sector_token": sector_token,
+        "sector_token": (
+            f"0x{sector_token:02x}" if sector_token is not None else None
+        ),
+        "sector_token_signed": (
+            _signed_byte(sector_token) if sector_token is not None else None
+        ),
         "requires_runtime_sector_token": sector_token is None,
         "chunk_size": None,
         "chunk_count": None,
@@ -165,6 +184,7 @@ def inspect_rs485_update(
     return {
         "schema": 2,
         "mode": "offline-static-inspection",
+        "address": address,
         "firmware": {
             "name": path.name,
             "hardware": parsed["hardware"],
@@ -174,6 +194,7 @@ def inspect_rs485_update(
         },
         "stock_protocol": {
             "command": CMD_STOCK_FIRMWARE,
+            "header": STOCK_HEADER,
             "response_codes": {
                 f"0x{code:02x}": name for code, name in RESPONSE_NAMES.items()
             },
@@ -183,24 +204,31 @@ def inspect_rs485_update(
                     "state": 3,
                     "stage": "get_version",
                     "tx_payload": [SUB_GET_VERSION],
+                    "frame_hex": _control_frame_hex(address, bytes((SUB_GET_VERSION,))),
                     "rx": "25-byte hardware-application identity",
                 },
                 {
                     "state": 4,
                     "stage": "get_sector_size",
                     "tx_payload": [SUB_GET_SECTOR_SIZE],
-                    "rx": "one-byte sector token",
+                    "frame_hex": _control_frame_hex(address, bytes((SUB_GET_SECTOR_SIZE,))),
+                    "rx": (
+                        "response[9] one-byte sector token; both forced receive "
+                        "handlers store it in the field later loaded with LDRSB"
+                    ),
                 },
                 {
                     "state": 5,
                     "stage": "erase_flash",
                     "tx_payload": [SUB_ERASE_FLASH],
+                    "frame_hex": _control_frame_hex(address, bytes((SUB_ERASE_FLASH,))),
                     "rx": "status byte; handler logs it without a state transition",
                 },
                 {
                     "state": 6,
                     "stage": "update_request",
                     "tx_payload": [SUB_UPDATE_REQUEST],
+                    "frame_hex": _control_frame_hex(address, bytes((SUB_UPDATE_REQUEST,))),
                     "rx": "ACK advances to app_len",
                 },
                 {
@@ -208,12 +236,18 @@ def inspect_rs485_update(
                     "stage": "app_len",
                     "tx_payload": "little-endian uint32 firmware size",
                     "value": len(data),
+                    "payload_hex": struct.pack("<I", len(data)).hex(),
+                    "frame_hex": _control_frame_hex(
+                        address, struct.pack("<I", len(data))
+                    ),
                     "rx": "ACK advances to app_data",
                 },
                 {
                     "state": 8,
                     "stage": "app_data",
                     "tx_payload": "raw firmware chunk",
+                    "frame_hex": None,
+                    "data_frames_generated": False,
                     "chunking": chunking,
                     "rx": "ACK keeps app_data; DONE advances to update_end",
                 },
@@ -221,18 +255,21 @@ def inspect_rs485_update(
                     "state": 9,
                     "stage": "update_end",
                     "tx_payload": None,
+                    "frame_hex": None,
                     "note": "receive-side state reached when final app_data reply is DONE",
                 },
                 {
                     "state": 10,
                     "stage": "start_app",
                     "tx_payload": [SUB_START_APP],
+                    "frame_hex": _control_frame_hex(address, bytes((SUB_START_APP,))),
                     "rx": "ACK advances to app_run",
                 },
                 {
                     "state": 11,
                     "stage": "app_run",
                     "tx_payload": None,
+                    "frame_hex": None,
                 },
             ],
             "transport_retry_limit_observed": 3,
@@ -248,6 +285,8 @@ def inspect_rs485_update(
             "subcommands": "known",
             "response_code_names": "known",
             "ack_state_transitions": "known",
+            "sector_token_storage": "known-in-both-forced-receive-handlers",
+            "fixed_control_frames": "known-offline-only",
             "data_chunking": (
                 "formula-known-sector-token-required"
                 if sector_token is None
@@ -261,5 +300,6 @@ def inspect_rs485_update(
         },
         "serial_io_performed": False,
         "write_enabled": False,
+        "send_enabled": False,
         "flash_allowed": False,
     }

@@ -43,7 +43,7 @@ Still required:
 - chunk-size calculation recovered as a function of the signed one-byte sector token returned by `get_sector_size`; the development CFS token is still unknown, so no chunk count is claimed;
 - interrupted data behavior recovered: if state 9/update-end is not reached, stock marks the device failed and skips its later start-app command;
 - old/new comparison completed for the core F0 path: receive-state semantics are equivalent; the newer updater extends selected handling from device type 1 to types 1/10;
-- offline `k2fw inspect-update` planner implemented with no serial writer and permanent `write_enabled=false` / `flash_allowed=false`;
+- offline `k2fw inspect-update` planner implemented for exact CFS images, including fixed control-frame rendering and optional trusted sector-token arithmetic, with permanent `serial_io_performed=false` / `write_enabled=false` / `send_enabled=false` / `flash_allowed=false`;
 - recover the remaining serial MCU update frame sequence from `mcu_util`;
 - determine the real CFS sector token without unsafe mutation, or capture it on recoverable hardware;
 - prove updater re-entry/recovery after interrupted erase/data transfer;

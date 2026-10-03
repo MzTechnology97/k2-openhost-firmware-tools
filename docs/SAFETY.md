@@ -46,4 +46,4 @@ Do not commit Creality `.bin`, `.so`, OTA images, serial numbers or device-speci
 
 ## Offline update inspection
 
-`k2fw inspect-update` is intentionally disconnected from the serial transport. It can parse a local firmware image and reproduce the statically recovered stock state/chunk schedule, but it has no code path that opens `/dev/ttyUSB2` or sends `F0` update commands. Its output always keeps `serial_io_performed=false`, `write_enabled=false` and `flash_allowed=false`.
+`k2fw inspect-update` is intentionally disconnected from the serial transport. It accepts only an exact CFS firmware image, can render the recovered fixed control-frame bytes offline, and has no code path that opens `/dev/ttyUSB2` or sends those frames. Chunk sizing remains unresolved unless a trusted previously captured `F0/03` sector token is provided explicitly. Its output always keeps `serial_io_performed=false`, `write_enabled=false`, `send_enabled=false` and `flash_allowed=false`.
