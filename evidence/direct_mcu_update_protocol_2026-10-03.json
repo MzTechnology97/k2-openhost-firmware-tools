@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "scope": "Creality K2 Pro direct Main/Nozzle mcu_util protocol recovery",
+  "analysed_host_releases": {
+    "1.1.0.94": {
+      "mcu_util_size": 13912,
+      "mcu_util_sha256": "0de7a81ecf31c76fe07d4d5be27f83345dca074806014df69bbe88e0407a23de",
+      "ghidra_functions": 82,
+      "byte_delay_option": false
+    },
+    "1.1.6.7.2": {
+      "mcu_util_size": 13928,
+      "mcu_util_sha256": "856d63a8fde31b764c59a2646987822e396aab807137dd345f4d2f685713665e",
+      "ghidra_functions": 84,
+      "byte_delay_option": true
+    }
+  },
+  "checksum": {
+    "formula": "(~sum(payload_bytes)) & 0xff",
+    "handshake_is_special_one_byte": true
+  },
+  "fixed_transmissions": {
+    "handshake": "75",
+    "get_version": "00ff",
+    "update_request": "01fe",
+    "start_app": "02fd",
+    "get_sector_size": "03fc",
+    "enter_transparent": "04fb",
+    "exit_transparent": "05fa"
+  },
+  "sender_states": {
+    "1": "handshake",
+    "3": "enter_transparent",
+    "5": "exit_transparent",
+    "7": "get_version",
+    "9": "get_sector_size",
+    "11": "update_request",
+    "13": "app_len",
+    "15": "app_data",
+    "17": "start_app"
+  },
+  "version_response": {
+    "identity_bytes": 25,
+    "checksum_bytes": 1,
+    "total_bytes": 26
+  },
+  "sector_token": {
+    "storage": "signed int8 from first response byte after checksum validation",
+    "zero": "invalid",
+    "positive_formula": "token * 1024 bytes",
+    "negative_formula": "abs(token) * 4 bytes",
+    "checked_read_buffer_bytes": 17408,
+    "development_printer_value_queried": false
+  },
+  "app_length": {
+    "encoding": "little-endian uint32 followed by checksum",
+    "main_f012_image_size": 30948,
+    "main_f012_payload_hex": "e4780000",
+    "main_f012_wire_hex": "e4780000a3",
+    "nozzle_f012_image_size": 30872,
+    "nozzle_f012_payload_hex": "98780000",
+    "nozzle_f012_wire_hex": "98780000ef"
+  },
+  "app_data_responses": {
+    "0x1f": "NACK/retry path",
+    "0x20": "DONE",
+    "0x21": "FAIL/error",
+    "0x75": "ACK/nonterminal continue"
+  },
+  "data_retry": {
+    "max_retry_cycles": 3,
+    "on_checksum_failure_or_nack": [
+      "set retry-update flag",
+      "return to update_request",
+      "lseek firmware fd to offset 0",
+      "restart transfer from beginning"
+    ],
+    "host_chunk_resume_supported": false
+  },
+  "old_new_result": {
+    "core_protocol_equivalent": true,
+    "new_release_difference": "-d/--delay can write one byte at a time with usleep(delay)"
+  },
+  "live_safety": {
+    "serial_io_performed": false,
+    "loader_handshake_sent": false,
+    "firmware_flash_performed": false,
+    "mcu_reset_performed": false,
+    "bootloader_entry_performed": false
+  }
+}

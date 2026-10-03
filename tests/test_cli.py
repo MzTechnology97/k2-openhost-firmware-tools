@@ -43,3 +43,19 @@ def test_inspect_update_sector_token_is_explicit_and_optional():
         ["inspect-update", "fw.bin", "--sector-code", "0xfe"]
     )
     assert alias.sector_token == 0xFE
+
+def test_inspect_mcu_update_sector_token_is_explicit_and_optional():
+    args = build_parser().parse_args(
+        ["inspect-mcu-update", "mcu0_120_G32-mcu0_001_000.bin"]
+    )
+    assert args.sector_token is None
+
+    args = build_parser().parse_args(
+        [
+            "inspect-mcu-update",
+            "noz0_130_G30-noz0_021_000.bin",
+            "--sector-token",
+            "0x04",
+        ]
+    )
+    assert args.sector_token == 0x04

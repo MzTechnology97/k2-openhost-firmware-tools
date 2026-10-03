@@ -51,6 +51,22 @@ Nozzle noz0_130_G30-noz0_021_000.bin
 
 Those filenames are deterministic package provenance, not substitutes for the device's 25-byte live loader response.
 
+Further static recovery of both `mcu_util` generations establishes the direct-loader control sequence:
+
+```text
+75       handshake
+04 fb    enter transparent mode
+05 fa    exit transparent mode
+00 ff    get version
+03 fc    get sector size
+01 fe    update request
+<4-byte little-endian application length><checksum>
+<firmware chunk><checksum>
+02 fd    start application
+```
+
+The second byte of each fixed two-byte command is the one's-complement checksum. The newer utility adds `-d/--delay` to optionally transmit one byte at a time with a microsecond delay; the older utility writes each current buffer in one call. Core command/state semantics are otherwise equivalent. See `DIRECT_MCU_UPDATE_PROTOCOL.md` for sector-token sizing and retry behavior.
+
 Static strings in the utility show a staged update protocol including `update_request`, sector-size confirmation, update start, application-length confirmation and application-data transfer.
 
 The stock shell code compares the version returned by the device with the one matching `.bin` in the selected firmware directory and only flashes when the application revision differs, unless a force flag is used.

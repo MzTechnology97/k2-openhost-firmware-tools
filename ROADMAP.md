@@ -44,7 +44,13 @@ Still required:
 - interrupted data behavior recovered: if state 9/update-end is not reached, stock marks the device failed and skips its later start-app command;
 - old/new comparison completed for the core F0 path: receive-state semantics are equivalent; the newer updater extends selected handling from device type 1 to types 1/10;
 - offline `k2fw inspect-update` planner implemented for exact CFS images, including fixed control-frame rendering and optional trusted sector-token arithmetic, with permanent `serial_io_performed=false` / `write_enabled=false` / `send_enabled=false` / `flash_allowed=false`;
-- recover the remaining serial MCU update frame sequence from `mcu_util`;
+- direct serial MCU update sequence recovered from both `mcu_util` generations: `75` handshake, `00 FF` version, `03 FC` sector-size, `01 FE` update-request, little-endian application length + checksum, firmware chunks + checksum, then `02 FD` start-app; `04 FB`/`05 FA` are transparent-mode controls;
+- direct-MCU checksum recovered as one's-complement of the uint8 payload sum; fixed control frames and app-length framing covered by tests;
+- direct-MCU sector-token chunk formula recovered: positive signed token -> token × 1024 bytes, negative -> abs(token) × 4 bytes, zero invalid, with stock checked-read buffer size `0x4400`;
+- direct-MCU data retry semantics recovered: checksum failure/NACK restarts at `update_request` and seeks the firmware file back to offset 0, up to three data retry cycles;
+- old/new direct updater comparison completed: core protocol is equivalent; `1.1.6.7.2` adds `-d/--delay` byte pacing;
+- offline `k2fw inspect-mcu-update` implemented for Main/Nozzle images with permanent `serial_io_performed=false` / `write_enabled=false` / `send_enabled=false` / `flash_allowed=false`;
+- determine the real Main/Nozzle sector token on recoverable hardware before any writable direct-MCU path;
 - static cfs0 image layout recovered: both analysed generations are linked at `0x08010000`, leaving a distinct 64 KiB lower-flash region; the stock bundle contains no separate cfs0 bootloader image;
 - G30/G32 application images are byte-identical in both analysed releases, so the board variant does not change application payload bytes, while loader identity remains a safety gate;
 - recovered stock host flow carries no flash destination address; erase/write placement is owned by the peripheral loader;

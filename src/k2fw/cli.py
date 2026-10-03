@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .live import query_klipper_mcus, query_motor_runtime_versions, query_printer_status
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
+from .mcu_update import inspect_mcu_update
 from .preflight import run_preflight
 from .rs485 import probe_cfs_version
 from .rs485_update import inspect_rs485_update
@@ -75,6 +76,15 @@ def cmd_inspect_update(args: argparse.Namespace) -> int:
     result = inspect_rs485_update(
         args.firmware,
         address=args.address,
+        sector_token=args.sector_token,
+    )
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_inspect_mcu_update(args: argparse.Namespace) -> int:
+    result = inspect_mcu_update(
+        args.firmware,
         sector_token=args.sector_token,
     )
     _write_or_print(result, args.output)
@@ -195,6 +205,26 @@ def build_parser() -> argparse.ArgumentParser:
     )
     inspect_update.add_argument("-o", "--output", help="write JSON result to this path")
     inspect_update.set_defaults(func=cmd_inspect_update)
+
+    inspect_mcu_update_cmd = sub.add_parser(
+        "inspect-mcu-update",
+        help="inspect the recovered direct Main/Nozzle update sequence offline",
+    )
+    inspect_mcu_update_cmd.add_argument(
+        "firmware", help="local Main/Nozzle direct-MCU .bin image"
+    )
+    inspect_mcu_update_cmd.add_argument(
+        "--sector-token",
+        type=lambda value: int(value, 0),
+        help=(
+            "optional trusted one-byte get-sector-size response; "
+            "used only for offline chunk arithmetic"
+        ),
+    )
+    inspect_mcu_update_cmd.add_argument(
+        "-o", "--output", help="write JSON result to this path"
+    )
+    inspect_mcu_update_cmd.set_defaults(func=cmd_inspect_mcu_update)
 
     probe_mcus = sub.add_parser(
         "probe-mcus",

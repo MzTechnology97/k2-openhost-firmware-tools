@@ -48,6 +48,8 @@ Do not commit Creality `.bin`, `.so`, OTA images, serial numbers or device-speci
 
 `k2fw inspect-update` is intentionally disconnected from the serial transport. It accepts only an exact CFS firmware image, can render the recovered fixed control-frame bytes offline, and has no code path that opens `/dev/ttyUSB2` or sends those frames. Chunk sizing remains unresolved unless a trusted previously captured `F0/03` sector token is provided explicitly. Its output always keeps `serial_io_performed=false`, `write_enabled=false`, `send_enabled=false` and `flash_allowed=false`.
 
+`k2fw inspect-mcu-update` follows the same rule for Main/Nozzle images. It renders the recovered direct-loader control bytes and checksum logic, but contains no serial writer and never performs the `0x75` loader handshake. A sector token may be supplied only for offline arithmetic; the tool does not query one from the printer. Its output also permanently keeps `serial_io_performed=false`, `write_enabled=false`, `send_enabled=false` and `flash_allowed=false`.
+
 ## CFS application / loader boundary
 
 The analysed `cfs0` application images are linked at `0x08010000`, leaving 64 KiB below the application region. The stock `mcu_util_485` update protocol does not transmit a host-selected flash destination address, so erase/write placement is controlled by the peripheral loader. This is strong evidence of an application/loader separation, but it is not proof that the loader always survives an interrupted erase/write. Hardware recovery validation is still required before CFS writes can be enabled.
