@@ -58,7 +58,11 @@ Still required:
 - host-side interruption behavior recovered: retries are transaction-local (max three), there is no resume offset/checkpoint, and a fresh invocation restarts the image from offset 0;
 - prove device-side CFS loader reachability/recovery after interrupted erase/data transfer on recoverable hardware;
 - implement remaining frame codecs with unit tests and captured fixtures;
-- identify recovery/startup commands for interrupted updates.
+- stock CFS/Box reset orchestration recovered from both compared `upgrade-server` generations: stop Klipper -> run byte-identical `mcu_reset.sh` -> `CFS=1 /etc/init.d/mcu_update start` -> inspect `/tmp/.485_mcu_version`;
+- `mcu_reset.sh` recovered as GPIO 140 / PE12 `MCU_PWR_EN`: 1=power off, 0=power on, default reset is two-second power-off then power-on; electrical rail fan-out remains unproven;
+- host “mcu upgrade” separated from serial/RS-485 paths: it is an SWD mechanism using `echo 1 > /sys/devices/platform/swd/swd_update` and `cat /sys/devices/platform/swd/update_progress`;
+- verify the electrical scope and recovery effect of GPIO 140 on recoverable hardware before treating stock power-cycle orchestration as a writable recovery path;
+- identify any remaining proven recovery/startup commands for interrupted updates.
 
 ## Phase 4 — controlled flashing
 

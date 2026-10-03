@@ -82,13 +82,15 @@ Phase 3 now also includes an offline CFS RS-485 update inspector. Forced decompi
 
 The direct Main/Nozzle serial updater has now been recovered as well. `mcu_util` uses `75` handshake and complemented control pairs `04 FB` enter-transparent, `05 FA` exit-transparent, `00 FF` get-version, `03 FC` get-sector-size, `01 FE` update-request and `02 FD` start-app; application length and data chunks carry the same one's-complement checksum. `k2fw inspect-mcu-update` renders this path offline only. See `docs/DIRECT_MCU_UPDATE_PROTOCOL.md`.
 
+Stock reset orchestration is now separated from those protocol paths. Both compared `upgrade-server` generations perform the CFS/Box sequence `klipper stop -> mcu_reset.sh -> CFS=1 mcu_update`, while their “mcu upgrade” branch is a distinct host-MCU SWD mechanism using `/sys/devices/platform/swd/swd_update`. The byte-identical `mcu_reset.sh` power-cycles GPIO 140/PE12 for two seconds; K2-OpenHost does not expose that action. See `docs/STOCK_RESET_ORCHESTRATION.md`.
+
 For a live CFS query, first release the RS-485 port from Klipper and then explicitly acknowledge exclusive ownership:
 
 ```bash
 python -m k2fw probe-cfs --port /dev/ttyUSB2 --exclusive
 ```
 
-See `docs/LIVE_READ_ONLY_STATUS.md` for the validated live probes, `docs/MANIFEST_COMPARISON.md` for live-vs-manifest comparison, `docs/DIRECT_MCU_UPDATE_PROTOCOL.md` for the recovered Main/Nozzle serial protocol, `docs/STOCK_UPDATE_PATH.md` for the stock orchestration, `docs/PERIPHERAL_GENERATIONS.md` for the old/new device deltas and `docs/SAFETY.md` for the validation gates required before write support is enabled.
+See `docs/LIVE_READ_ONLY_STATUS.md` for the validated live probes, `docs/MANIFEST_COMPARISON.md` for live-vs-manifest comparison, `docs/DIRECT_MCU_UPDATE_PROTOCOL.md` for the recovered Main/Nozzle serial protocol, `docs/STOCK_RESET_ORCHESTRATION.md` for the stock power/reset boundaries, `docs/STOCK_UPDATE_PATH.md` for the stock orchestration, `docs/PERIPHERAL_GENERATIONS.md` for the old/new device deltas and `docs/SAFETY.md` for the validation gates required before write support is enabled.
 
 ## Project relationship
 

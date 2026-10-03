@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "scope": "K2 Pro stock reset, CFS OTA, and host-MCU SWD orchestration",
+  "analysed_host_releases": {
+    "1.1.0.94": {
+      "upgrade_server_size": 120176,
+      "upgrade_server_sha256": "bc695fd91dabd3993ece896afea0543e7cfa84c0c8eb0c359a05cb597944cd6a",
+      "ghidra_functions": 340,
+      "mcu_update_sha256": "e5696b5bbb25c8ff447f1b39f5f4163fe9ca59bb37b02cb13779f35068da6cd5"
+    },
+    "1.1.6.7.2": {
+      "upgrade_server_size": 120176,
+      "upgrade_server_sha256": "b0863d3bc444ccdd040e98369da2f27cb89764e50d0413995256daf48b001727",
+      "ghidra_functions": 347,
+      "mcu_update_sha256": "24aa3fda930dd794f1a99d265c5399bb3bd0a780ad45fdf6f58f7559502dfe61"
+    }
+  },
+  "mcu_reset_script": {
+    "path": "/usr/bin/mcu_reset.sh",
+    "size": 1021,
+    "sha256_both_releases": "1c436606d7bcc7b3a8811c623dbc9be7dbe128ee21df00ec177ecc6ee1408d3c",
+    "gpio": 140,
+    "soc_pin_comment": "PE12",
+    "name": "MCU_PWR_EN",
+    "logic": {
+      "0": "power on",
+      "1": "power off"
+    },
+    "default_power_cycle": [
+      "configure GPIO 140 output",
+      "write 1",
+      "sleep 2 seconds",
+      "write 0"
+    ],
+    "electrical_fanout_proven": false
+  },
+  "cfs_box_ota": {
+    "sequence": [
+      "/etc/init.d/klipper stop",
+      "/usr/bin/mcu_reset.sh",
+      "CFS=1 /etc/init.d/mcu_update start",
+      "read /tmp/.485_mcu_version"
+    ],
+    "old_call_addresses": {
+      "klipper_stop": "0x14fac",
+      "mcu_reset": "0x14fb4",
+      "cfs_mcu_update": "0x14fbc"
+    },
+    "new_call_addresses": {
+      "klipper_stop": "0x13b10",
+      "mcu_reset": "0x13b18",
+      "cfs_mcu_update": "0x13b20"
+    },
+    "stable_across_compared_releases": true,
+    "proves_specific_loader_variant": false
+  },
+  "host_mcu_swd": {
+    "distinct_from_direct_serial_mcu_util": true,
+    "distinct_from_rs485_mcu_util_485": true,
+    "log_strings": [
+      "start mcu upgrade ...",
+      "mcu1 SWD upgrade ...",
+      "reset host mcu",
+      "swd cmd = %s"
+    ],
+    "trigger_command": "echo 1 > /sys/devices/platform/swd/swd_update",
+    "progress_command": "cat /sys/devices/platform/swd/update_progress",
+    "mcu_reset_sh_reference_in_swd_branch": false
+  },
+  "klipper_restart": {
+    "command_string_present": true,
+    "command": "/etc/init.d/klipper restart",
+    "direct_cfs_branch_callsite_proven": false,
+    "policy": "do not treat as a recovered CFS recovery step"
+  },
+  "live_operations": {
+    "mcu_reset_sh_executed": false,
+    "gpio_modified": false,
+    "power_cycle_performed": false,
+    "swd_triggered": false,
+    "loader_entry_performed": false,
+    "firmware_flash_performed": false
+  },
+  "conclusion": "The stock CFS OTA intentionally stops Klipper and invokes a two-second MCU power-cycle before CFS mcu_update in both compared releases. The host-MCU SWD update is a separate mechanism. K2-OpenHost keeps all reset/power/SWD actions disabled until hardware recovery behavior is independently validated."
+}

@@ -36,6 +36,12 @@ The stock updater's `F0/00` command is documented as protocol evidence but is no
 
 For CFS 1.1.3, bounded `F0/00` probes with both tested headers returned `INVALID_PARAM`. Stock exact-identity discovery proceeds through A1/A0 address management; because A0 changes bus address state, the read-only tooling does not reproduce it. Future CFS write support must obtain the exact boot/hardware variant from a non-mutating source or require explicit, independently verified target provenance.
 
+## Stock power/reset action is not a read-only primitive
+
+Both compared stock OTA servers stop Klipper and invoke `/usr/bin/mcu_reset.sh` before the CFS-specific `mcu_update` pass. That script drives GPIO 140 / PE12 (`MCU_PWR_EN`) high for two seconds (power off) and then low (power on). It is a physical power-cycle, not an identity/status query.
+
+K2-OpenHost therefore never calls `mcu_reset.sh` from `status`, `probe-*`, preflight, or either offline update inspector. The exact electrical fan-out of GPIO 140 is not inferred from the script name alone. See `STOCK_RESET_ORCHESTRATION.md`.
+
 ## Interrupted RS-485 update risk
 
 Static recovery now shows that a stock RS-485 target reaches `update_end` only when the `app_data` receive handler sees `DONE`. If transfer exits before that transition, `mcu_util_485` marks the device update as failed and the later `start_app` loop skips that device. This makes proven updater re-entry/recovery mandatory before K2-OpenHost can expose any RS-485 write command.

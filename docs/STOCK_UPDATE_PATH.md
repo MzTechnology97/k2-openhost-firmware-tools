@@ -120,7 +120,25 @@ CFS=1 /etc/init.d/mcu_update start
 /usr/bin/mcu_reset.sh
 ```
 
-The same binary also contains an SWD path for a host MCU (`/sys/devices/platform/swd/swd_update`). That path must not be conflated with the serial `mcu_util` path until the exact target and update conditions are mapped.
+Static call-site recovery now separates those paths. In both compared `upgrade-server` generations the CFS/Box branch executes, in order:
+
+```text
+/etc/init.d/klipper stop
+/usr/bin/mcu_reset.sh
+CFS=1 /etc/init.d/mcu_update start
+read /tmp/.485_mcu_version
+```
+
+The `mcu_reset.sh` file is byte-identical across the releases. It controls GPIO 140 / PE12 named `MCU_PWR_EN`; its default action writes 1 (power off), sleeps two seconds, then writes 0 (power on). Static evidence does not establish the exact electrical fan-out of that rail.
+
+The “mcu upgrade” branch is separate and logs `mcu1 SWD upgrade ...`. Its recovered commands are:
+
+```text
+echo 1 > /sys/devices/platform/swd/swd_update
+cat /sys/devices/platform/swd/update_progress
+```
+
+So the host-MCU SWD path must not be conflated with direct serial `mcu_util`, RS-485 `mcu_util_485`, or the CFS power-cycle sequence. See `STOCK_RESET_ORCHESTRATION.md`.
 
 ## K2-OpenHost implication
 
