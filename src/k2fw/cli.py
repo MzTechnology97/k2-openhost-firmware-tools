@@ -10,6 +10,7 @@ from .device_matrix import inspect_device_matrix
 from .live import query_klipper_mcus, query_motor_runtime_versions, query_printer_status
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .mcu_update import inspect_mcu_update
+from .motor_loader import inspect_motor_loader_probe
 from .preflight import run_preflight
 from .rs485 import probe_cfs_version
 from .rs485_update import inspect_rs485_update
@@ -107,6 +108,12 @@ def cmd_probe_cfs_loader(args: argparse.Namespace) -> int:
 
 def cmd_inspect_cfs_loader_probe(args: argparse.Namespace) -> int:
     result = inspect_cfs_loader_probe(address=args.address)
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_inspect_motor_loader_probe(args: argparse.Namespace) -> int:
+    result = inspect_motor_loader_probe(address=args.address)
     _write_or_print(result, args.output)
     return 0
 
@@ -279,6 +286,24 @@ def build_parser() -> argparse.ArgumentParser:
         "-o", "--output", help="write JSON result to this path"
     )
     inspect_loader.set_defaults(func=cmd_inspect_cfs_loader_probe)
+
+    inspect_motor_loader = sub.add_parser(
+        "inspect-motor-loader-probe",
+        help=(
+            "render the proven stock motor loader discovery/identity path offline; "
+            "does not invent a loader-entry trigger"
+        ),
+    )
+    inspect_motor_loader.add_argument(
+        "--address",
+        type=lambda value: int(value, 0),
+        default=0x85,
+        help="offline temporary motor loader address (default 0x85)",
+    )
+    inspect_motor_loader.add_argument(
+        "-o", "--output", help="write JSON result to this path"
+    )
+    inspect_motor_loader.set_defaults(func=cmd_inspect_motor_loader_probe)
 
     inspect_update = sub.add_parser(
         "inspect-update",

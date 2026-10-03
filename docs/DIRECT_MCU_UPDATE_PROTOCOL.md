@@ -21,6 +21,22 @@ The stock `mcu_update` service invokes `mcu_util` as separate processes:
 
 The newer utility adds `-d/--delay`, microseconds between transmitted bytes. The older utility has no pacing option.
 
+## Boot-transition fingerprint in the F012 images
+
+Both analysed F012 direct-MCU images contain exact 64-bit constants from the CanBoot/Katapult boot-transition ABI:
+
+| Constant | Value | Main offset | Nozzle offset |
+| --- | --- | ---: | ---: |
+| `CANBOOT_SIGNATURE` | `0x21746f6f426e6143` (`CanBoot!`) | `0x3E0` | `0x3E0` |
+| `REQUEST_START_APP` | `0x7b06ec45a9a8243d` | `0x3E8` | `0x3E8` |
+| `REQUEST_CANBOOT` | `0x5984e3fa6ca1589b` | absent | absent |
+
+Upstream Katapult uses the signature in its Cortex-M boot entry and `REQUEST_START_APP` to request a reset into the application. Exact byte-for-byte presence of those constants proves reuse of that boot-transition ABI/primitives in the Creality images.
+
+It does **not** prove that the stock direct serial protocol is the upstream Katapult wire protocol: Creality's host still uses the independently recovered `mcu_util` command/checksum state machine below, and `REQUEST_CANBOOT` is not present in the analysed F012 images.
+
+`k2fw inspect-mcu-update` reports this fingerprint offline; it does not enter the loader.
+
 ## Checksum
 
 Apart from the one-byte handshake, direct protocol transmissions append the one's-complement of the low eight bits of the byte sum:

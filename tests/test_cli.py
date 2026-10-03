@@ -87,3 +87,8 @@ def test_probe_cfs_loader_requires_all_explicit_safety_flags():
 def test_device_matrix_command_is_registered():
     args = build_parser().parse_args(["device-matrix"])
     assert args.command == "device-matrix"
+
+def test_motor_loader_probe_command_is_registered():
+    args = build_parser().parse_args(["inspect-motor-loader-probe"])
+    assert args.command == "inspect-motor-loader-probe"
+    assert args.address == 0x85

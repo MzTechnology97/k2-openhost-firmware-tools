@@ -3,6 +3,10 @@ from pathlib import Path
 import pytest
 
 from k2fw.mcu_update import (
+    CANBOOT_SIGNATURE,
+    REQUEST_CANBOOT,
+    REQUEST_START_APP,
+    direct_mcu_boot_fingerprint,
     build_control,
     build_payload,
     checksum8,
@@ -101,3 +105,20 @@ def test_direct_inspector_rejects_non_mcu_images(tmp_path: Path):
     fw.write_bytes(b"x" * 64)
     with pytest.raises(ValueError, match="Main/Nozzle"):
         inspect_mcu_update(fw)
+
+def test_direct_mcu_boot_fingerprint_recovers_canboot_abi_magic():
+    data = bytearray(b"\x00" * 0x500)
+    data[0x3E0:0x3E8] = CANBOOT_SIGNATURE.to_bytes(8, "little")
+    data[0x3E8:0x3F0] = REQUEST_START_APP.to_bytes(8, "little")
+
+    result = direct_mcu_boot_fingerprint(bytes(data))
+    assert result["canboot_signature"]["offsets"] == ["0x3e0"]
+    assert result["request_start_app"]["offsets"] == ["0x3e8"]
+    assert result["request_canboot"]["present"] is False
+    assert "reuse of CanBoot/Katapult" in result["interpretation"]
+
+
+def test_direct_mcu_boot_fingerprint_reports_request_canboot_when_present():
+    data = REQUEST_CANBOOT.to_bytes(8, "little")
+    result = direct_mcu_boot_fingerprint(data)
+    assert result["request_canboot"]["offsets"] == ["0x0"]

@@ -16,6 +16,8 @@ K2-OpenHost firmware tooling is not CFS-specific. Static analysis of the stock F
 
 The important motor difference is that stock `mcu_util_485` does not send `F0/06` erase to device type 2. It still sends `F0/01`, application length, application data and `F0/02`. The exact motor-side erase/preparation policy therefore remains unresolved and must not be guessed.
 
+Stock motor discovery is now resolved more precisely: it sends A1 to group `0xFD` with payload `FD FD`; the common identity response carries `device_type | mode | 12-byte UniID`, and only type-2 devices already reporting `mode=1` enter the firmware path. The stock loop expects exactly two such devices and assigns temporary addresses beginning at `0x85`. This proves the two-device RS-485 enumeration path; E uses the same runtime motor protocol through the Toolhead transparent transport, but its stock loader enumeration equivalence remains unproven.
+
 ## Motor evidence
 
 The K2 Pro motor images are WCH CH32V30x / QingKe RISC-V firmware.
@@ -56,7 +58,7 @@ data chunks + one's-complement checksum
 
 The Toolhead/Nozzle MCU also supplies the transparent tunnel used for downstream RS-485 updates.
 
-For F012 the nozzle target is `noz0_130_G30-noz0_021_000.bin`. Its vector table starts at `0x08000000`, reset vector resolves to `0x080033F8`, application token is at offset `0x200`, `CanBoot!` is present at `0x3E0`, and the hardware token `noz0_130_G30` is not embedded in the image. Main follows the same pattern.
+For F012 the nozzle target is `noz0_130_G30-noz0_021_000.bin`; Main follows the same package pattern. Both analysed images contain their application token at offset `0x200` and do not contain the filename hardware token. More importantly, both contain the exact upstream CanBoot/Katapult 64-bit `CANBOOT_SIGNATURE` (`0x21746f6f426e6143`) at offset `0x3E0` and `REQUEST_START_APP` (`0x7b06ec45a9a8243d`) at `0x3E8`. The upstream `REQUEST_CANBOOT` magic is absent from both. This is strong exact evidence that Creality's direct-MCU images reuse CanBoot/Katapult boot-transition ABI constants, but it does not establish that stock `mcu_util` speaks the upstream Katapult wire protocol or that the whole upstream bootloader is embedded unchanged.
 
 The direct loader lifecycle is proven in the stock host, but live loader entry, real sector token and interrupted-update recovery are still hardware-validation gates.
 

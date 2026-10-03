@@ -24,6 +24,59 @@ DIRECT_MCU_KINDS = {"main_mcu", "nozzle_mcu"}
 STOCK_DATA_BUFFER_SIZE = 0x4400
 
 
+CANBOOT_SIGNATURE = 0x21746F6F426E6143
+REQUEST_CANBOOT = 0x5984E3FA6CA1589B
+REQUEST_START_APP = 0x7B06EC45A9A8243D
+
+
+def _magic_offsets(data: bytes, value: int) -> list[int]:
+    needle = int(value).to_bytes(8, "little")
+    offsets = []
+    start = 0
+    while True:
+        found = data.find(needle, start)
+        if found < 0:
+            break
+        offsets.append(found)
+        start = found + 1
+    return offsets
+
+
+def direct_mcu_boot_fingerprint(data: bytes) -> dict[str, Any]:
+    """Identify exact CanBoot/Katapult ABI magic present in stock direct images."""
+    signature = _magic_offsets(data, CANBOOT_SIGNATURE)
+    request_canboot = _magic_offsets(data, REQUEST_CANBOOT)
+    request_start_app = _magic_offsets(data, REQUEST_START_APP)
+    return {
+        "canboot_signature": {
+            "value": f"0x{CANBOOT_SIGNATURE:016x}",
+            "offsets": [f"0x{x:x}" for x in signature],
+            "present": bool(signature),
+        },
+        "request_canboot": {
+            "value": f"0x{REQUEST_CANBOOT:016x}",
+            "offsets": [f"0x{x:x}" for x in request_canboot],
+            "present": bool(request_canboot),
+        },
+        "request_start_app": {
+            "value": f"0x{REQUEST_START_APP:016x}",
+            "offsets": [f"0x{x:x}" for x in request_start_app],
+            "present": bool(request_start_app),
+        },
+        "classification": (
+            "exact CanBoot/Katapult signature and REQUEST_START_APP ABI magic "
+            "are present; REQUEST_CANBOOT is absent in the analysed stock images"
+            if signature and request_start_app and not request_canboot
+            else "stock image does not match the analysed CanBoot/Katapult magic pattern"
+        ),
+        "interpretation": (
+            "proves reuse of CanBoot/Katapult boot-transition ABI constants; "
+            "does not by itself prove that stock mcu_util implements the upstream "
+            "Katapult wire protocol or that the complete upstream bootloader is embedded"
+        ),
+    }
+
+
 def checksum8(data: bytes) -> int:
     """Stock mcu_util checksum: one's complement of the uint8 byte sum."""
     return (~sum(data)) & 0xFF
@@ -120,6 +173,7 @@ def inspect_mcu_update(
             "kind": parsed["kind"],
             "size": len(data),
             "sha256": hashlib.sha256(data).hexdigest(),
+            "boot_fingerprint": direct_mcu_boot_fingerprint(data),
         },
         "stock_protocol": {
             "transport": "direct serial MCU loader",

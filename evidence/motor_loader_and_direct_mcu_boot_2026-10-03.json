@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "date": "2026-10-03",
+  "scope": "motor-loader-and-direct-mcu-boot-fingerprint",
+  "motor_loader": {
+    "device_type": 2,
+    "discovery_group": "0xfd",
+    "discovery_payload": "fdfd",
+    "discovery_frame": "f7fd0500a1fdfdce",
+    "required_mode": 1,
+    "application_mode": 0,
+    "stock_expected_count": 2,
+    "first_temp_address": "0x85",
+    "first_get_version_frame": "f7850400f0004c",
+    "first_get_sector_frame": "f7850400f00345",
+    "explicit_f0_06_erase": false,
+    "update_request": "f0/01",
+    "start_application_frame": "f7850400f00242",
+    "loader_entry_command": null,
+    "loader_entry_proven": false,
+    "extruder_e_stock_loader_equivalence_proven": false,
+    "live_read_only": {
+      "flash_param_version": {
+        "x": 583,
+        "y": 583,
+        "e": 583
+      },
+      "mapped_application": "mot2_002_071",
+      "boot_key": {
+        "x": 17030,
+        "y": 17030,
+        "e": 17030,
+        "hex": "0x4286"
+      },
+      "system_startup_delay_ms": {
+        "x": 100,
+        "y": 100,
+        "e": 100
+      },
+      "flash_key_write_retries_num": {
+        "x": 5,
+        "y": 5,
+        "e": 5
+      }
+    },
+    "host_updater_contains_0x4286_literal": false
+  },
+  "direct_mcu": {
+    "main_target": "mcu0_120_G32-mcu0_001_000.bin",
+    "toolhead_target": "noz0_130_G30-noz0_021_000.bin",
+    "exact_magic": {
+      "canboot_signature": {
+        "value": "0x21746f6f426e6143",
+        "offset": "0x3e0",
+        "present_in_main": true,
+        "present_in_toolhead": true
+      },
+      "request_start_app": {
+        "value": "0x7b06ec45a9a8243d",
+        "offset": "0x3e8",
+        "present_in_main": true,
+        "present_in_toolhead": true
+      },
+      "request_canboot": {
+        "value": "0x5984e3fa6ca1589b",
+        "present_in_main": false,
+        "present_in_toolhead": false
+      }
+    },
+    "interpretation": "exact CanBoot/Katapult ABI constants reused; upstream wire protocol/full bootloader identity not proven"
+  },
+  "safety": {
+    "motor_serial_io_performed": false,
+    "motor_loader_entry_performed": false,
+    "motor_write_enabled": false,
+    "direct_mcu_loader_entry_performed": false,
+    "direct_mcu_write_enabled": false,
+    "flash_allowed": false
+  }
+}

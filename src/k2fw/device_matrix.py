@@ -175,9 +175,23 @@ def inspect_device_matrix() -> dict[str, Any]:
                 "and 081 applications; no direct application-side consumption was "
                 "identified, consistent with but not proof of loader-side use"
             ),
+            "stock_loader_enumeration": {
+                "device_type": 2,
+                "discovery_group": "0xfd",
+                "discovery_payload": "fdfd",
+                "required_mode": 1,
+                "stock_expected_count": 2,
+                "first_temp_address": "0x85",
+                "proven_scope": "two motors on the stock RS-485 enumeration path",
+                "extruder_e_equivalence": "not-yet-proven",
+            },
             "stock_update_difference": (
                 "motors share A1/A0/F0 loader flow with CFS but do not receive the "
                 "explicit F0/06 erase command"
+            ),
+            "loader_entry": (
+                "unresolved: stock mcu_util_485 only updates motors already reporting "
+                "mode=1; no host-side motor loader-entry command has been recovered"
             ),
             "bootloader_placement": (
                 "unresolved; motor application package contains its application token "
@@ -187,8 +201,18 @@ def inspect_device_matrix() -> dict[str, Any]:
         "toolhead_findings": {
             "package_target": "noz0_130_G30-noz0_021_000.bin",
             "application_token_offset": "0x200",
-            "canboot_marker_offset": "0x3e0",
             "hardware_token_embedded_in_package": False,
+            "canboot_katapult_abi": {
+                "signature": "0x21746f6f426e6143",
+                "signature_offset": "0x3e0",
+                "request_start_app": "0x7b06ec45a9a8243d",
+                "request_start_app_offset": "0x3e8",
+                "request_canboot_present": False,
+                "interpretation": (
+                    "exact upstream ABI constants are reused; full upstream "
+                    "Katapult wire protocol/bootloader identity is not proven"
+                ),
+            },
             "loader_lifecycle_proven_in_stock_host": True,
         },
         "safety": {

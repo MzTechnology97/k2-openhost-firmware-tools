@@ -64,10 +64,14 @@ Still required:
 - host-side interruption behavior recovered: retries are transaction-local (max three), there is no resume offset/checkpoint, and a fresh invocation restarts the image from offset 0;
 - prove device-side CFS loader reachability/recovery after interrupted erase/data transfer on recoverable hardware;
 - RS-485 device matrix recovered: motor=type 2/group 0xFD, belt=3/0xFC, RFID=4/0xFB, CFS=1/0xFE, CFS Pro=10/0xFE;
+- stock motor loader-mode gate recovered: A1 group `0xFD` uses payload `FD FD`, A1/A2 identity carries `device_type | mode | UniID`, and only type-2 devices with `mode=1` enter the firmware path;
+- stock motor enumeration expects exactly two type-2 devices on this path and assigns temporary addresses starting at `0x85`; this proves the two-device RS-485 path but does not yet prove E uses the same stock loader enumeration;
 - motor updater path confirmed to share A1/A0/F0 version-sector-update-data-start states with CFS, while explicit F0/06 erase is skipped for motors;
-- development X/Y/E read-only boot parameters confirmed identical: boot_key=0x4286 and system_startup_delay_ms=100; no boot-key write or reboot performed;
+- development X/Y/E read-only boot parameters confirmed identical: `boot_key=0x4286`, `system_startup_delay_ms=100`, `flash_key_write_retries_num=5`; the 0x4286 literal is absent from both old/new host updater binaries, and no boot-key write or reboot was performed;
 - motor package analysis confirms application token embedded at offset 0x200 while hardware/loader token remains package provenance; motor loader placement/entry remains unresolved;
 - Toolhead/Nozzle classified under the direct-mcu backend: stock loader lifecycle and transparent RS-485 bridge are proven, but live loader entry/sector/recovery remain gated;
+- F012 Main and Toolhead/Nozzle images fingerprinted against upstream CanBoot/Katapult ABI constants: exact `CANBOOT_SIGNATURE` at `0x3e0` and `REQUEST_START_APP` at `0x3e8`; `REQUEST_CANBOOT` is absent, so reuse of boot-transition primitives is proven but upstream wire-protocol equivalence is not claimed;
+- offline `k2fw inspect-motor-loader-probe` added for the proven loader-present path only; it deliberately omits an unproven loader-entry command and keeps all write/send/flash gates false;
 - multi-device architecture exposed by `k2fw device-matrix`;
 - implement remaining frame codecs with unit tests and captured fixtures;
 - stock CFS/Box reset orchestration recovered from both compared `upgrade-server` generations: stop Klipper -> run byte-identical `mcu_reset.sh` -> `CFS=1 /etc/init.d/mcu_update start` -> inspect `/tmp/.485_mcu_version`;
