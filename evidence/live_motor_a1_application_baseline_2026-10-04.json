@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "scope": "live K2 Pro RS-485 motor loader baseline without power cycle",
+  "preflight": {
+    "printer_state": "ready",
+    "print_state": "standby",
+    "heater_targets": {
+      "bed": 0,
+      "extruder": 0,
+      "chamber": 0
+    },
+    "klipper_owner_released_before_probe": true
+  },
+  "probe": {
+    "transport": "CM5 /dev/ttyUSB2 -> T113 ttyGS2 -> ttyS5 -> RS-485",
+    "baud": 230400,
+    "frame_hex": "f7fd0500a1fdfdce",
+    "semantic": "A1 motor discovery to group 0xfd with payload fd fd",
+    "duration_s": 1.5,
+    "transmit_interval_s": 0.05,
+    "responses": 0,
+    "raw_rx_hex": ""
+  },
+  "interpretation": [
+    "running-application state did not expose motor loader A1 discovery",
+    "baseline supports the need for a hardware power-on/reset transition before loader discovery",
+    "this test does not prove exact loader timing or GPIO140 electrical fan-out"
+  ],
+  "post_state": {
+    "klipper_process_restored": true,
+    "moonraker_state": "ready",
+    "print_state": "standby",
+    "heater_targets": {
+      "bed": 0,
+      "extruder": 0,
+      "chamber": 0
+    }
+  },
+  "safety": {
+    "gpio140_toggled": false,
+    "erase_sent": false,
+    "update_request_sent": false,
+    "firmware_data_sent": false,
+    "address_assignment_sent": false,
+    "start_app_sent": false
+  }
+}

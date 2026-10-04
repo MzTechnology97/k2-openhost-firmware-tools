@@ -72,6 +72,7 @@ Still required:
 - Toolhead/Nozzle classified under the direct-mcu backend: stock loader lifecycle and transparent RS-485 bridge are proven, but live loader entry/sector/recovery remain gated;
 - F012 Main and Toolhead/Nozzle images fingerprinted against upstream CanBoot/Katapult ABI constants: exact `CANBOOT_SIGNATURE` at `0x3e0` and `REQUEST_START_APP` at `0x3e8`; `REQUEST_CANBOOT` is absent, so reuse of boot-transition primitives is proven but upstream wire-protocol equivalence is not claimed;
 - offline `k2fw inspect-motor-loader-probe` added for the proven loader-present path only; it deliberately omits an unproven loader-entry command and keeps all write/send/flash gates false;
+- live K2 Pro application-state baseline: with Klipper ownership released, repeated motor A1 discovery (`f7 fd 05 00 a1 fd fd ce`) on the 230400 RS-485 path for 1.5 s returned zero bytes; loader discovery therefore was not exposed in the normal running-application state, strengthening the hardware power-on/reset hypothesis without proving GPIO140 fan-out or timing;
 - multi-device architecture exposed by `k2fw device-matrix`;
 - implement remaining frame codecs with unit tests and captured fixtures;
 - stock CFS/Box reset orchestration recovered from both compared `upgrade-server` generations: stop Klipper -> run byte-identical `mcu_reset.sh` -> `CFS=1 /etc/init.d/mcu_update start` -> inspect `/tmp/.485_mcu_version`;
