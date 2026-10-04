@@ -50,7 +50,10 @@
       "serial485_transport_ready": true,
       "nozzle_transport_ready": true,
       "motor_ready": true
-    }
+    },
+    "post_runtime_serial485_transport_ready": true,
+    "post_runtime_nozzle_transport_ready": true,
+    "post_runtime_cfs_data_ready": true
   },
   "rs485_counts": {
     "belt": 0,
