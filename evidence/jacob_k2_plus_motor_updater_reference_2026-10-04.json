@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "source": {
+    "artifact": "Jacob K2 Plus custom-firmware rootfs /usr/bin/motor_updater.py",
+    "sha256": "0ba8d5fad79029ebbe16b907b0fb06d547d77a693a0265076025c723a52b3d62",
+    "scope": "reference implementation; K2 Plus model-specific counts and targets"
+  },
+  "boot": {
+    "service": "motor-updater.service",
+    "wanted_by": "sysinit.target",
+    "klipper_after": "motor-updater.service",
+    "gpio": 140,
+    "gpio_name": "MCU_PWR_EN",
+    "active_low": true,
+    "script_claims_kernel_boots_rail_off": true,
+    "default_power_on_settle_s": 1,
+    "optional_power_cycle_off_s": 1
+  },
+  "transports": {
+    "rs485": {
+      "port": "ttyS5",
+      "baud": 230400
+    },
+    "main_p2p": {
+      "port": "ttyS2",
+      "baud": 115200
+    },
+    "nozzle_p2p": {
+      "port": "ttyS3",
+      "baud": 115200
+    }
+  },
+  "p2p": {
+    "handshake": "75",
+    "ack": "758a",
+    "done": "20df",
+    "get_version": "00ff",
+    "get_sector": "03fc",
+    "update_request": "01fe",
+    "start_app": "02fd",
+    "enter_transparent": "04fb",
+    "exit_transparent": "05fa",
+    "checksum": "ones-complement uint8 sum",
+    "positive_sector_chunk_formula": "sector_byte * 1024"
+  },
+  "extruder": {
+    "transport": "P2P through Nozzle transparent mode",
+    "separate_handshake_after_enter_transparent": false,
+    "get_version": "00ff",
+    "chunk_override": 256,
+    "explicit_start_app_after_update": false,
+    "k2_pro_stock_equivalence": "not proven"
+  },
+  "rs485": {
+    "groups": {
+      "motor": "0xfd",
+      "belt": "0xfc",
+      "rfid": "0xfb",
+      "cfs": "0xfe"
+    },
+    "address_bases": {
+      "motor": "0x85",
+      "belt": "0x23",
+      "rfid": "0x11",
+      "cfs": "0x01"
+    },
+    "expected_counts": {
+      "motor": 4,
+      "belt": 2,
+      "rfid": 1,
+      "cfs": 4
+    },
+    "motor_f0_06": false,
+    "cfs_f0_06": true,
+    "chunk_retries": 5
+  },
+  "firmware_targets": [
+    "cfs0_050_G32-cfs0_000_142.bin",
+    "mcu0_140_G32-mcu0_022_000.bin",
+    "mot2_023_C30-mot2_002_081.bin",
+    "noz0_130_G30-noz0_021_000.bin"
+  ],
+  "safety": {
+    "reference_does_not_enable_k2_pro_write_support": true,
+    "k2_pro_live_power_cycle_performed": false,
+    "k2_pro_loader_probe_performed_from_this_reference": false
+  }
+}

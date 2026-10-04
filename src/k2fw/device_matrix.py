@@ -106,6 +106,31 @@ RS485_FAMILIES = {
 }
 
 
+TUNNELED_P2P_FAMILIES = {
+    "extruder": FirmwareDeviceFamily(
+        name="extruder",
+        transport="P2P loader tunneled through Nozzle transparent mode",
+        updater="Jacob K2 Plus motor_updater.py reference",
+        stock_device_type=None,
+        discovery_address=None,
+        explicit_erase=None,
+        loader_identity_query="00 FF after Nozzle 04 FB transparent mode",
+        sector_query="03 FC",
+        update_request="01 FE",
+        start_application="not explicitly sent by the Jacob reference updater",
+        runtime_identity="application flash_param_version through motor-control protocol",
+        live_loader_entry=(
+            "Jacob K2 Plus reference relies on shared MCU-rail power-on before "
+            "Nozzle transparent mode; K2 Pro equivalence is not yet proven"
+        ),
+        recovery_status=(
+            "reference updater uses the direct P2P checksum/data protocol with a "
+            "256-byte extruder chunk override; K2 Pro stock path remains gated"
+        ),
+    ),
+}
+
+
 DIRECT_MCU_FAMILIES = {
     "main": FirmwareDeviceFamily(
         name="main",
@@ -154,6 +179,77 @@ def inspect_device_matrix() -> dict[str, Any]:
         "direct_mcu": {
             name: asdict(item) for name, item in DIRECT_MCU_FAMILIES.items()
         },
+        "tunneled_p2p": {
+            name: asdict(item) for name, item in TUNNELED_P2P_FAMILIES.items()
+        },
+        "jacob_k2_plus_reference": {
+            "provenance": {
+                "artifact": "motor_updater.py from Jacob K2 Plus custom rootfs",
+                "sha256": "0ba8d5fad79029ebbe16b907b0fb06d547d77a693a0265076025c723a52b3d62",
+                "scope": "reference implementation; model-specific counts/targets are not K2 Pro facts",
+            },
+            "boot_orchestration": {
+                "systemd_stage": "sysinit.target",
+                "klipper_ordering": "klipper.service starts After=motor-updater.service",
+                "gpio": 140,
+                "gpio_name": "MCU_PWR_EN",
+                "active_low": True,
+                "script_claims_kernel_boots_rail_off": True,
+                "default_action": "set rail ON then wait 1.0 s before updater threads",
+                "optional_power_cycle": "1.0 s OFF, then ON, then 1.0 s settle",
+                "implication": (
+                    "reference design expects loaders to remain reachable after "
+                    "hardware power-on; no application-side loader-entry command is used"
+                ),
+            },
+            "parallel_transports": {
+                "rs485": {"port": "ttyS5", "baud": 230400},
+                "main_p2p": {"port": "ttyS2", "baud": 115200},
+                "nozzle_p2p": {"port": "ttyS3", "baud": 115200},
+            },
+            "p2p_protocol": {
+                "handshake": "75 -> 75",
+                "ack": "75 8a",
+                "final_done": "20 df",
+                "get_version": "00 ff",
+                "get_sector": "03 fc",
+                "update_request": "01 fe",
+                "start_app": "02 fd",
+                "enter_transparent": "04 fb",
+                "exit_transparent": "05 fa",
+                "chunk_checksum": "ones-complement uint8 sum",
+                "positive_sector_chunk_formula": "sector_byte * 1024",
+            },
+            "extruder": {
+                "path": "Nozzle P2P -> 04 fb transparent -> extruder P2P",
+                "separate_0x75_handshake_in_reference": False,
+                "version_query": "00 ff",
+                "chunk_override": 256,
+                "explicit_start_app_after_extruder_update": False,
+                "k2_pro_equivalence": "not-yet-proven",
+            },
+            "rs485": {
+                "reference_expected_counts": {
+                    "motor": 4,
+                    "belt": 2,
+                    "rfid": 1,
+                    "cfs": 4,
+                },
+                "note": (
+                    "these counts belong to the K2 Plus reference and must not replace "
+                    "the independently recovered K2 Pro stock count"
+                ),
+                "motor_explicit_f0_06_erase": False,
+                "cfs_explicit_f0_06_erase": True,
+                "chunk_retries": 5,
+            },
+            "firmware_targets": [
+                "cfs0_050_G32-cfs0_000_142.bin",
+                "mcu0_140_G32-mcu0_022_000.bin",
+                "mot2_023_C30-mot2_002_081.bin",
+                "noz0_130_G30-noz0_021_000.bin",
+            ],
+        },
         "motor_findings": {
             "current_application_fingerprint": {
                 "x": 0x0247,
@@ -184,6 +280,10 @@ def inspect_device_matrix() -> dict[str, Any]:
                 "first_temp_address": "0x85",
                 "proven_scope": "two motors on the stock RS-485 enumeration path",
                 "extruder_e_equivalence": "not-yet-proven",
+                "jacob_k2_plus_reference": (
+                    "E is updated with the P2P protocol through Nozzle transparent mode, "
+                    "not through the RS-485 F0 stream; K2 Pro stock equivalence pending"
+                ),
             },
             "stock_update_difference": (
                 "motors share A1/A0/F0 loader flow with CFS but do not receive the "
