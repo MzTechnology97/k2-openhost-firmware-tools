@@ -89,6 +89,6 @@ Both RS-485 motors and the CFS reported loader `mode=1` during A1 discovery. Bel
 
 Application restore was acknowledged by Main/Nozzle `02 FD`, both motor `F0/02` requests and CFS `F0/02`; the proven CFS `0B/01` fallback was also sent. The printer returned to `ready/standby` with all heater targets at zero.
 
-This proves the hardware loader-entry mechanism and the K2 Pro E P2P path. It does **not** enable write/erase/update support; those gates remain closed.
+This proves the hardware loader-entry mechanism and the K2 Pro E P2P path. It does **not** enable write/erase/update support; those gates remain closed. Post-restore runtime verification also reported `motor_control.motor_ready=true`, `serial485_transport_ready=true`, `nozzle_transport_ready=true`, CFS `IDLE/OK`, and printer `ready/standby` with all heater targets at zero.
 
 See `LIVE_LOADER_IDENTITY.md` for the guarded 2026-10-04 hardware validation and exact K2 Pro loader identities.
