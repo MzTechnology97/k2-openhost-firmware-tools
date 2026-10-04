@@ -168,3 +168,51 @@ def test_k2_pro_live_loader_probe_records_all_validated_identities_without_flash
     assert safety["firmware_length_sent"] is False
     assert safety["firmware_data_sent"] is False
     assert safety["flash_allowed"] is False
+
+def test_k2_pro_live_sector_metadata_is_exact_and_write_gates_stay_closed():
+    result = inspect_device_matrix()
+    live = result["k2_pro_live_loader_probe"]
+    sectors = live["sector_metadata"]
+
+    assert sectors["main"] == {
+        "token": "0x02",
+        "signed": 2,
+        "chunk_size": 2048,
+        "formula": "direct MCU signed-sector formula",
+    }
+    assert sectors["nozzle"]["token"] == "0x02"
+    assert sectors["nozzle"]["chunk_size"] == 2048
+    assert sectors["extruder"]["token"] == "0xc0"
+    assert sectors["extruder"]["signed"] == -64
+    assert sectors["extruder"]["chunk_size"] == 256
+    assert sectors["extruder"]["jacob_override"] == 256
+    assert sectors["extruder"]["override_matches_live_formula"] is True
+    assert sectors["xy_motors"]["count"] == 2
+    assert sectors["xy_motors"]["tokens"] == ["0xe0", "0xe0"]
+    assert sectors["xy_motors"]["signed"] == -32
+    assert sectors["xy_motors"]["chunk_size"] == 128
+    assert sectors["cfs"]["token"] == "0xe0"
+    assert sectors["cfs"]["chunk_size"] == 128
+
+    prep = live["write_preparation"]
+    assert "first mutating command is F0/01" in prep["xy_motors"]
+    assert "first mutating command is 01 FE" in prep["main_nozzle"]
+    assert "explicit F0/06 erase" in prep["cfs"]
+    assert "not hardware-observed" in prep["device_internal_behavior"]
+
+    safety = live["safety"]
+    assert safety["sector_queries_sent"] is True
+    assert safety["sector_queries_are_non_flash"] is True
+    assert safety["erase_sent"] is False
+    assert safety["update_request_sent"] is False
+    assert safety["firmware_length_sent"] is False
+    assert safety["firmware_data_sent"] is False
+    assert safety["flash_allowed"] is False
+
+    top = result["safety"]
+    assert top["direct_mcu_sector_hardware_validated"] is True
+    assert top["motor_sector_hardware_validated"] is True
+    assert top["extruder_sector_hardware_validated"] is True
+    assert top["motor_write_enabled"] is False
+    assert top["direct_mcu_write_enabled"] is False
+    assert top["flash_allowed"] is False

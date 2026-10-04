@@ -51,6 +51,45 @@ CFS     cfs0_050_G32  cfs0_000_113 -> cfs0_000_150  application differs
 
 This is exact target resolution, not flash authorization. `flash_allowed=false` remains mandatory.
 
+## Live sector/chunk metadata
+
+A second guarded non-flash probe added only the read-only sector queries `03 FC` and `F0/03`:
+
+| Role | Sector token | Signed | Stock chunk |
+| --- | ---: | ---: | ---: |
+| Main | `0x02` | `+2` | 2048 B |
+| Nozzle | `0x02` | `+2` | 2048 B |
+| Extruder E | `0xC0` | `-64` | 256 B |
+| X/Y motors | `0xE0` / `0xE0` | `-32` | 128 B |
+| CFS | `0xE0` | `-32` | 128 B |
+
+The E result is particularly useful: the live `0xC0` token resolves to exactly **256 bytes**, independently matching Jacob's 256-byte extruder chunk override.
+
+No update request, erase, application length or firmware data was sent during this probe.
+
+### Host-side write-preparation boundary
+
+The host sequences are now resolved up to the first mutating command:
+
+```text
+Main / Nozzle / E:
+03 FC   read sector
+01 FE   first mutating update-request
+(no separate host erase command)
+
+X/Y:
+F0/03   read sector
+F0/01   first mutating update-request
+(no F0/06)
+
+CFS:
+F0/03   read sector
+F0/06   explicit erase
+F0/01   update-request
+```
+
+This identifies the host-side boundary, but it does not reveal what erase/preparation the Main/Nozzle/E/X/Y loaders perform internally after `01 FE` / `F0/01`.
+
 ## Restore behavior
 
 Main and Nozzle returned successful `02 FD` start-app ACKs. Both RS-485 motors and CFS returned successful `F0/02` ACKs; the already validated CFS `0B/01` fallback was also sent.
@@ -74,10 +113,9 @@ Therefore a future production probe must verify application-level readiness in a
 
 Still not validated:
 
-- Main/Nozzle real sector tokens;
-- K2 Pro E sector/chunk behavior;
-- motor sector/write-preparation semantics;
+- device-internal erase/preparation behavior triggered by `01 FE` / `F0/01`;
+- post-write verification for Main/Nozzle/E/X/Y;
 - interrupted-write device-side recovery;
-- any erase or firmware write.
+- any actual erase or firmware write.
 
 No flash command is enabled.
