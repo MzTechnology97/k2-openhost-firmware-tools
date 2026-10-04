@@ -74,4 +74,7 @@ The **write/recovery gates remain closed**. For Main/Nozzle/E, `01 FE` is the fi
 
 Application restore must be verified beyond the ACK. During the validated probe both X/Y returned `F0/02` ACK; one Y runtime address probe initially timed out, then the normal motor-control retry path recovered and `motor_ready=true`. CFS similarly retains its stronger A2/`0B/01` verification requirement.
 
+
+Transfer geometry may now be calculated exactly from the live sector tokens and verified manifest sizes, but this is still offline arithmetic. Chunk counts/tails must never be treated as authorization to send `01 FE`, `F0/01`, `F0/06`, application length or firmware data.
+
 No firmware write is enabled.

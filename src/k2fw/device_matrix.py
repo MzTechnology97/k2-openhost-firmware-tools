@@ -270,6 +270,14 @@ def inspect_device_matrix() -> dict[str, Any]:
                     "formula": "RS-485 signed-sector formula",
                 },
             },
+            "transfer_geometry_1_1_6_7_2": {
+                "main": {"size": 30948, "chunk_size": 2048, "chunk_count": 16, "tail_size": 228, "update_required": False},
+                "nozzle": {"size": 30872, "chunk_size": 2048, "chunk_count": 16, "tail_size": 152, "update_required": False},
+                "extruder": {"size": 116412, "chunk_size": 256, "chunk_count": 455, "tail_size": 188, "update_required": True},
+                "xy_motors": {"per_motor_size": 116396, "chunk_size": 128, "chunk_count_per_motor": 910, "tail_size": 44, "device_count": 2, "update_required": True},
+                "cfs": {"size": 175104, "chunk_size": 128, "chunk_count": 1368, "tail_size": 128, "full_chunks_only": True, "update_required": True},
+                "flash_allowed": False,
+            },
             "write_preparation": {
                 "main_nozzle": (
                     "host sequence has no separate erase command; after 03 FC the first "
