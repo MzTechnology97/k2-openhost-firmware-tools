@@ -125,9 +125,9 @@ TUNNELED_P2P_FAMILIES = {
             "Nozzle 04 FB transparent mode exposes E P2P identity"
         ),
         recovery_status=(
-            "K2 Pro loader identity path is hardware-validated; Jacob reference "
-            "documents the 256-byte update chunk override, but K2 Pro write semantics "
-            "remain gated"
+            "K2 Pro loader identity and sector path are hardware-validated; sector token "
+            "0xC0 resolves to the same 256-byte chunk used by the Jacob override. "
+            "Write/recovery semantics remain gated"
         ),
     ),
 }
@@ -148,8 +148,8 @@ DIRECT_MCU_FAMILIES = {
         runtime_identity="running Klipper/Kalico MCU identity",
         live_loader_entry="hardware-validated on K2 Pro after GPIO140 MCU-rail power-cycle",
         recovery_status=(
-            "live loader handshake, identity and 02 FD application restore are hardware-validated; "
-            "sector token and interrupted-write recovery remain gated"
+            "live loader handshake, identity, sector token/chunk and 02 FD application restore "
+            "are hardware-validated; interrupted-write recovery remains gated"
         ),
     ),
     "toolhead": FirmwareDeviceFamily(
@@ -166,8 +166,8 @@ DIRECT_MCU_FAMILIES = {
         runtime_identity="running nozzle_mcu Klipper/Kalico identity",
         live_loader_entry="hardware-validated on K2 Pro after GPIO140 MCU-rail power-cycle",
         recovery_status=(
-            "live loader handshake, identity, transparent-mode entry/exit and 02 FD "
-            "application restore are hardware-validated on K2 Pro"
+            "live loader handshake, identity, sector token/chunk, transparent-mode entry/exit "
+            "and 02 FD application restore are hardware-validated on K2 Pro"
         ),
     ),
 }
@@ -235,6 +235,60 @@ def inspect_device_matrix() -> dict[str, Any]:
                 "belt": 0,
                 "rfid": 0,
             },
+            "sector_metadata": {
+                "main": {
+                    "token": "0x02",
+                    "signed": 2,
+                    "chunk_size": 2048,
+                    "formula": "direct MCU signed-sector formula",
+                },
+                "nozzle": {
+                    "token": "0x02",
+                    "signed": 2,
+                    "chunk_size": 2048,
+                    "formula": "direct MCU signed-sector formula",
+                },
+                "extruder": {
+                    "token": "0xc0",
+                    "signed": -64,
+                    "chunk_size": 256,
+                    "formula": "direct MCU signed-sector formula",
+                    "jacob_override": 256,
+                    "override_matches_live_formula": True,
+                },
+                "xy_motors": {
+                    "count": 2,
+                    "tokens": ["0xe0", "0xe0"],
+                    "signed": -32,
+                    "chunk_size": 128,
+                    "formula": "RS-485 signed-sector formula",
+                },
+                "cfs": {
+                    "token": "0xe0",
+                    "signed": -32,
+                    "chunk_size": 128,
+                    "formula": "RS-485 signed-sector formula",
+                },
+            },
+            "write_preparation": {
+                "main_nozzle": (
+                    "host sequence has no separate erase command; after 03 FC the first "
+                    "mutating command is 01 FE update-request"
+                ),
+                "extruder": (
+                    "same tunneled P2P rule as direct MCU; first mutating command is 01 FE"
+                ),
+                "xy_motors": (
+                    "stock/Jacob host sequence sends no F0/06; after F0/03 the first "
+                    "mutating command is F0/01 update-request"
+                ),
+                "cfs": (
+                    "CFS differs: host sends explicit F0/06 erase before F0/01"
+                ),
+                "device_internal_behavior": (
+                    "not hardware-observed because no mutating update-request was sent"
+                ),
+            },
             "loader_modes": {
                 "motor": 1,
                 "cfs": 1,
@@ -262,6 +316,8 @@ def inspect_device_matrix() -> dict[str, Any]:
                 "update_request_sent": False,
                 "firmware_length_sent": False,
                 "firmware_data_sent": False,
+                "sector_queries_sent": True,
+                "sector_queries_are_non_flash": True,
                 "flash_allowed": False,
                 "device_uniids_published": False,
             },
@@ -371,7 +427,8 @@ def inspect_device_matrix() -> dict[str, Any]:
             },
             "stock_update_difference": (
                 "motors share A1/A0/F0 loader flow with CFS but do not receive the "
-                "explicit F0/06 erase command"
+                "explicit F0/06 erase command; both live X/Y loaders returned sector "
+                "token 0xE0, resolving the stock chunk size to 128 bytes"
             ),
             "loader_entry": (
                 "hardware-validated: GPIO140 MCU-rail power-cycle exposes two K2 Pro "
@@ -405,8 +462,11 @@ def inspect_device_matrix() -> dict[str, Any]:
             "motor_write_enabled": False,
             "direct_mcu_loader_entry_hardware_validated": True,
             "direct_mcu_loader_entry_enabled": False,
+            "direct_mcu_sector_hardware_validated": True,
             "direct_mcu_write_enabled": False,
+            "motor_sector_hardware_validated": True,
             "extruder_loader_identity_hardware_validated": True,
+            "extruder_sector_hardware_validated": True,
             "flash_allowed": False,
         },
     }

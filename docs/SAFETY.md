@@ -68,7 +68,9 @@ The loader identity/sector workflow is **non-flash but state-changing**. Enterin
 
 GPIO140 hardware power-cycle has now been validated as a common loader-entry mechanism on the development K2 Pro. Two X/Y-class RS-485 motors answer A1 group `0xFD` in `mode=1` and identify as `mot2_023_C30-mot2_002_071`. E identifies separately as `mot2_022_C30-mot2_002_071` through Nozzle P2P transparent mode. Main and Nozzle also answer the direct P2P loader identity query after the same power-cycle.
 
-This closes the loader-entry/identity gate but **not** the write/recovery gates. Motors still have unresolved sector/write-preparation semantics, E still lacks K2 Pro write-path validation, and Main/Nozzle real sector tokens plus interrupted-write recovery remain unproven.
+Loader entry, exact identity and read-only sector/chunk metadata are now hardware-validated for Main, Nozzle, E, X/Y and CFS. Main/Nozzle return `0x02` -> 2048-byte chunks, E returns `0xC0` -> 256 bytes, and X/Y/CFS return `0xE0` -> 128 bytes. These reads are non-flash but still occur inside a state-changing maintenance workflow.
+
+The **write/recovery gates remain closed**. For Main/Nozzle/E, `01 FE` is the first mutating command after the sector read; for X/Y it is `F0/01`; motors do not receive `F0/06`. Device-internal erase/preparation behavior after those update requests and interrupted-write recovery remain unproven.
 
 Application restore must be verified beyond the ACK. During the validated probe both X/Y returned `F0/02` ACK; one Y runtime address probe initially timed out, then the normal motor-control retry path recovered and `motor_ready=true`. CFS similarly retains its stronger A2/`0B/01` verification requirement.
 

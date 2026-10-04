@@ -87,9 +87,10 @@ A guarded K2 Pro maintenance probe now validates:
 - GPIO140 power-cycle -> two X/Y loader replies in `mode=1`;
 - A0 temporary addresses `0x85` / `0x86`;
 - F0/00 identities `mot2_023_C30-mot2_002_071`;
+- F0/03 sector token `0xE0` on both X/Y loaders, resolving the stock RS-485 chunk size to **128 bytes**;
 - F0/02 application-start ACK on both devices;
 - post-restore application recovery through normal `motor_control` startup.
 
 One Y runtime address probe timed out immediately after restore and recovered on the normal motor-control retry path. Therefore F0/02 ACK alone is not treated as sufficient application-readiness proof.
 
-The loader-entry gate is closed as a research question, but write support remains disabled until motor sector/chunk behavior, write preparation/erase semantics, post-write verification and interrupted-write recovery are hardware-validated.
+The loader-entry and sector/chunk gates are now closed as research questions. On the host side, stock and Jacob flows agree that motors do **not** receive `F0/06`; after read-only `F0/03`, the first mutating command is `F0/01` update-request. What `F0/01` causes internally in the motor loader (erase/preparation timing), post-write verification and interrupted-write recovery remain hardware-validation gates. No write command is enabled.

@@ -92,7 +92,9 @@ else:
 
 The checked read buffer is `0x4400` bytes. The offline inspector therefore rejects a supplied token whose derived read size exceeds that buffer.
 
-The development printer's direct-MCU loader sector token has not been queried. `k2fw inspect-mcu-update` leaves chunk size/count unresolved unless the operator explicitly supplies a token obtained independently.
+The development K2 Pro has now been queried in a guarded non-flash loader probe. Main and Nozzle both return sector token `0x02` (signed `+2`), which resolves the stock direct-MCU chunk size to **2048 bytes**. The tunneled Extruder E returns `0xC0` (signed `-64`), which resolves to **256 bytes**. That exactly matches Jacob's previously hard-coded 256-byte E override, so the override is now independently explained by the live K2 Pro loader token.
+
+`k2fw inspect-mcu-update` remains offline-only: it still requires an explicit sector token when used to calculate chunking and does not itself enter the loader or perform serial I/O.
 
 ## Data response behavior
 
@@ -166,14 +168,14 @@ send_enabled: false
 flash_allowed: false
 ```
 
-It deliberately does not enter the loader, query the real sector token, erase flash or generate a runnable flashing plan.
+It deliberately does not enter the loader, erase flash or generate a runnable flashing plan. Real K2 Pro sector tokens have now been captured separately by the guarded maintenance probe.
 
 ## Remaining direct-MCU gates
 
 Before any Main/Nozzle write path can be considered:
 
 - obtain or independently confirm the live loader hardware/application identity;
-- determine the real sector token on recoverable hardware;
+- sector token/chunk sizing: **hardware-validated** (`Main=0x02/2048`, `Nozzle=0x02/2048`, `E=0xC0/256`);
 - prove loader re-entry after an interrupted erase/write;
 - prove whether failed application data always leaves the controller reachable;
 - verify the direct protocol on sacrificial/recoverable hardware;

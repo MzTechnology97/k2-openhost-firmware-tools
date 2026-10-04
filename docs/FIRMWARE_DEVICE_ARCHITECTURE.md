@@ -60,7 +60,7 @@ The Toolhead/Nozzle MCU also supplies the transparent tunnel used for downstream
 
 For F012 the nozzle target is `noz0_130_G30-noz0_021_000.bin`; Main follows the same package pattern. Both analysed images contain their application token at offset `0x200` and do not contain the filename hardware token. More importantly, both contain the exact upstream CanBoot/Katapult 64-bit `CANBOOT_SIGNATURE` (`0x21746f6f426e6143`) at offset `0x3E0` and `REQUEST_START_APP` (`0x7b06ec45a9a8243d`) at `0x3E8`. The upstream `REQUEST_CANBOOT` magic is absent from both. This is strong exact evidence that Creality's direct-MCU images reuse CanBoot/Katapult boot-transition ABI constants, but it does not establish that stock `mcu_util` speaks the upstream Katapult wire protocol or that the whole upstream bootloader is embedded unchanged.
 
-The direct loader lifecycle is proven in the stock host, but live loader entry, real sector token and interrupted-update recovery are still hardware-validation gates.
+The direct loader lifecycle, live GPIO140 entry and real sector tokens are now hardware-validated on the K2 Pro. Main and Nozzle return `0x02` -> 2048-byte chunks; E returns `0xC0` -> 256 bytes through Nozzle transparent mode. Interrupted-update recovery and device-internal preparation after `01 FE` remain write-path gates.
 
 ## Tool architecture
 
@@ -92,3 +92,17 @@ Application restore was acknowledged by Main/Nozzle `02 FD`, both motor `F0/02` 
 This proves the hardware loader-entry mechanism and the K2 Pro E P2P path. It does **not** enable write/erase/update support; those gates remain closed. Post-restore runtime verification also reported `motor_control.motor_ready=true`, `serial485_transport_ready=true`, `nozzle_transport_ready=true`, CFS `IDLE/OK`, and printer `ready/standby` with all heater targets at zero.
 
 See `LIVE_LOADER_IDENTITY.md` for the guarded 2026-10-04 hardware validation and exact K2 Pro loader identities.
+
+### Live K2 Pro sector metadata
+
+The same guarded maintenance path was extended with read-only sector queries only:
+
+```text
+Main      03 FC -> 02 FD   token 0x02  -> 2048 B
+Nozzle    03 FC -> 02 FD   token 0x02  -> 2048 B
+E         03 FC -> C0 3F   token 0xC0  -> 256 B
+X/Y       F0/03 -> 0xE0    token 0xE0  -> 128 B
+CFS       F0/03 -> 0xE0    token 0xE0  -> 128 B
+```
+
+For E, the live 256-byte result exactly matches Jacob's reference override. Host-side write preparation is now bounded: Main/Nozzle/E go directly from sector read to `01 FE`; X/Y go directly from `F0/03` to `F0/01`; only CFS receives explicit `F0/06` erase. Internal loader erase/preparation semantics remain unknown because no mutating request was sent.

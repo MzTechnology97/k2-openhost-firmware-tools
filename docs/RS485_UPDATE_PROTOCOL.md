@@ -106,7 +106,9 @@ else:
 
 The transfer buffer is 255 bytes, while an `F0` frame can carry at most 252 payload bytes because the stock length byte includes three protocol bytes in addition to the payload.
 
-The exact sector token returned by the development CFS boot/update state has **not** been queried. Therefore the offline inspector does not claim a chunk count unless the operator supplies a previously captured token explicitly.
+Live guarded loader probes now show that the development K2 Pro returns sector token `0xE0` (signed `-32`) for **both X/Y motor loaders and the G32 CFS loader**. The recovered formula therefore yields a **128-byte** stock data chunk for all three observed RS-485 targets. Belt/RFID were not present in loader discovery on this machine.
+
+The offline inspector remains non-I/O and still requires an explicit token for arithmetic; it does not implicitly assume `0xE0` for other hardware or generations.
 
 For example, token `0xC1` is signed `-63` and the recovered formula yields a 252-byte chunk size. This is a mathematical example of the recovered formula, not a claim that the CFS returns `0xC1`.
 

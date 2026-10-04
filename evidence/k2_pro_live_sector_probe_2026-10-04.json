@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "scope": "K2 Pro live loader sector/chunk probe",
+  "entry": {
+    "gpio": 140,
+    "name": "MCU_PWR_EN",
+    "sequence": [
+      "set 1",
+      "wait 1.0 s",
+      "set 0",
+      "wait 1.0 s"
+    ],
+    "hardware_validated": true
+  },
+  "transports": {
+    "main": {
+      "port": "ttyS2",
+      "baud": 115200
+    },
+    "nozzle": {
+      "port": "ttyS3",
+      "baud": 115200
+    },
+    "rs485": {
+      "port": "ttyS5",
+      "baud": 230400
+    }
+  },
+  "sector_metadata": {
+    "main": {
+      "identity": "mcu0_120_G32-mcu0_001_000",
+      "token": "0x02",
+      "signed": 2,
+      "chunk_size": 2048
+    },
+    "nozzle": {
+      "identity": "noz0_130_G30-noz0_021_000",
+      "token": "0x02",
+      "signed": 2,
+      "chunk_size": 2048
+    },
+    "extruder": {
+      "identity": "mot2_022_C30-mot2_002_071",
+      "token": "0xc0",
+      "signed": -64,
+      "chunk_size": 256,
+      "jacob_override": 256,
+      "override_matches_live_formula": true
+    },
+    "xy_motors": {
+      "count": 2,
+      "identity": "mot2_023_C30-mot2_002_071",
+      "tokens": [
+        "0xe0",
+        "0xe0"
+      ],
+      "signed": -32,
+      "chunk_size": 128
+    },
+    "cfs": {
+      "identity": "cfs0_050_G32-cfs0_000_113",
+      "token": "0xe0",
+      "signed": -32,
+      "chunk_size": 128
+    },
+    "belt_count": 0,
+    "rfid_count": 0
+  },
+  "host_write_preparation": {
+    "main_nozzle": "03 FC read -> 01 FE first mutating update request; no separate host erase command",
+    "extruder": "03 FC read through Nozzle transparent mode -> 01 FE first mutating update request",
+    "xy_motors": "F0/03 read -> F0/01 first mutating update request; no F0/06 for motors",
+    "cfs": "F0/03 read -> explicit F0/06 erase -> F0/01 update request",
+    "device_internal_behavior": "not observed because no mutating update request was sent"
+  },
+  "restore": {
+    "main_start_app_ack": true,
+    "nozzle_start_app_ack": true,
+    "xy_start_app_ack_count": 2,
+    "cfs_start_app_ack": true,
+    "cfs_0b01_fallback_sent": true,
+    "final_printer_state": "ready",
+    "final_print_state": "standby",
+    "motor_ready": true,
+    "serial485_transport_ready": true,
+    "nozzle_transport_ready": true,
+    "cfs": "IDLE/OK",
+    "heater_targets": {
+      "bed": 0,
+      "extruder": 0,
+      "chamber": 0
+    }
+  },
+  "safety": {
+    "erase_sent": false,
+    "update_request_sent": false,
+    "firmware_length_sent": false,
+    "firmware_data_sent": false,
+    "sector_queries_sent": true,
+    "sector_queries_are_non_flash": true,
+    "flash_allowed": false,
+    "device_uniids_omitted": true
+  }
+}
