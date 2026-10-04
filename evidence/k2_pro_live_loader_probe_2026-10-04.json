@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-04",
+  "entry": {
+    "gpio": 140,
+    "hardware_validated": true,
+    "name": "MCU_PWR_EN",
+    "sequence": [
+      "set 1",
+      "wait 1.0 s",
+      "set 0",
+      "wait 1.0 s"
+    ]
+  },
+  "identities": {
+    "cfs": "cfs0_050_G32-cfs0_000_113",
+    "extruder": "mot2_022_C30-mot2_002_071",
+    "main": "mcu0_120_G32-mcu0_001_000",
+    "rs485_motors": [
+      "mot2_023_C30-mot2_002_071",
+      "mot2_023_C30-mot2_002_071"
+    ],
+    "toolhead": "noz0_130_G30-noz0_021_000"
+  },
+  "modes": {
+    "cfs": 1,
+    "motor": 1
+  },
+  "restore": {
+    "cfs_0b01_fallback_sent": true,
+    "cfs_0x01_start_app_ack": true,
+    "final_cfs_state": "IDLE",
+    "final_cfs_status": "OK",
+    "final_motor_ready": true,
+    "final_print_state": "standby",
+    "final_printer_state": "ready",
+    "heater_targets": {
+      "bed": 0,
+      "chamber": 0,
+      "extruder": 0
+    },
+    "main_start_app_ack": true,
+    "motor_0x85_start_app_ack": true,
+    "motor_0x86_start_app_ack": true,
+    "runtime_note": "Y address discovery initially timed out once after loader restore; normal motor-control retry recovered and motor_ready became true.",
+    "toolhead_start_app_ack": true,
+    "post_runtime_printer_ready": true,
+    "post_runtime_motor_ready": true,
+    "post_runtime_cfs": "IDLE/OK",
+    "motor_control": {
+      "serial485_transport_ready": true,
+      "nozzle_transport_ready": true,
+      "motor_ready": true
+    }
+  },
+  "rs485_counts": {
+    "belt": 0,
+    "cfs": 1,
+    "motor": 2,
+    "rfid": 0
+  },
+  "safety": {
+    "erase_sent": false,
+    "firmware_data_sent": false,
+    "firmware_length_sent": false,
+    "flash_allowed": false,
+    "uniids_omitted": true,
+    "update_request_sent": false
+  },
+  "schema": 1,
+  "scope": "K2 Pro live hardware loader-entry identity probe",
+  "target_resolution_1_1_6_7_2": {
+    "cfs": {
+      "artifact": "cfs/cfs0_050_G32-cfs0_000_150.bin",
+      "current": "cfs0_000_113",
+      "sha256": "bde552ef5056037989457e294f88cfa7590b4c9251cda5e40adf0a4fae46c5a3",
+      "target": "cfs0_000_150",
+      "update_required": true
+    },
+    "extruder": {
+      "artifact": "F012/mot2_022_C30-mot2_002_081.bin",
+      "current": "mot2_002_071",
+      "sha256": "67b364a627c1609727a8add8237ed8e602326997af1866b34f88c7412198b3f7",
+      "target": "mot2_002_081",
+      "update_required": true
+    },
+    "main": {
+      "artifact": "F012/mcu0_120_G32-mcu0_001_000.bin",
+      "current": "mcu0_001_000",
+      "sha256": "bec548e946f0dd37d15f87569b23d55fb12410068f1a3ad2a95c45bf89c756d6",
+      "target": "mcu0_001_000",
+      "update_required": false
+    },
+    "toolhead": {
+      "artifact": "F012/noz0_130_G30-noz0_021_000.bin",
+      "current": "noz0_021_000",
+      "sha256": "6915e65bcbc543857a915ea93e4f0000879c851865efe776d83a8c9354be3208",
+      "target": "noz0_021_000",
+      "update_required": false
+    },
+    "xy_motors": {
+      "artifact": "F012/motor/mot2_023_C30-mot2_002_081.bin",
+      "current": "mot2_002_071",
+      "sha256": "92ff31301827406519ccad899125aa7895eeaefef240713b5543011bb7675826",
+      "target": "mot2_002_081",
+      "update_required": true
+    }
+  },
+  "transports": {
+    "main": {
+      "baud": 115200,
+      "port": "ttyS2"
+    },
+    "rs485": {
+      "baud": 230400,
+      "port": "ttyS5"
+    },
+    "toolhead": {
+      "baud": 115200,
+      "port": "ttyS3"
+    }
+  }
+}

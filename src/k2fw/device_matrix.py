@@ -34,10 +34,11 @@ RS485_FAMILIES = {
         update_request="F0/01",
         start_application="F0/02",
         runtime_identity="application flash_param_version (parameter id 0)",
-        live_loader_entry="not yet proven; stock updater starts with A1 discovery",
+        live_loader_entry="hardware-validated on K2 Pro after GPIO140 MCU-rail power-cycle; A1 reports mode=1",
         recovery_status=(
-            "shared loader/update state machine recovered; loader-entry trigger and "
-            "interrupted-write recovery are not yet proven"
+            "shared loader/update state machine recovered; hardware loader entry is "
+            "validated. F0/02 ACK was followed by application-runtime verification; "
+            "runtime address discovery may require its normal retry path"
         ),
     ),
     "belt": FirmwareDeviceFamily(
@@ -82,7 +83,7 @@ RS485_FAMILIES = {
         update_request="F0/01",
         start_application="F0/02",
         runtime_identity="application 0x14 VERSION_SN plus A2 mode",
-        live_loader_entry="guarded 0x56 broadcast, hardware-validated",
+        live_loader_entry="guarded 0x56 broadcast and GPIO140 power-cycle, both hardware-validated",
         recovery_status=(
             "loader identity/sector probe hardware-validated; F0/02 ACK requires "
             "A2 verification and 0B/01 fallback is proven"
@@ -120,12 +121,13 @@ TUNNELED_P2P_FAMILIES = {
         start_application="not explicitly sent by the Jacob reference updater",
         runtime_identity="application flash_param_version through motor-control protocol",
         live_loader_entry=(
-            "Jacob K2 Plus reference relies on shared MCU-rail power-on before "
-            "Nozzle transparent mode; K2 Pro equivalence is not yet proven"
+            "hardware-validated on K2 Pro after GPIO140 MCU-rail power-cycle; "
+            "Nozzle 04 FB transparent mode exposes E P2P identity"
         ),
         recovery_status=(
-            "reference updater uses the direct P2P checksum/data protocol with a "
-            "256-byte extruder chunk override; K2 Pro stock path remains gated"
+            "K2 Pro loader identity path is hardware-validated; Jacob reference "
+            "documents the 256-byte update chunk override, but K2 Pro write semantics "
+            "remain gated"
         ),
     ),
 }
@@ -144,10 +146,10 @@ DIRECT_MCU_FAMILIES = {
         update_request="01 FE",
         start_application="02 FD",
         runtime_identity="running Klipper/Kalico MCU identity",
-        live_loader_entry="not yet hardware-validated",
+        live_loader_entry="hardware-validated on K2 Pro after GPIO140 MCU-rail power-cycle",
         recovery_status=(
-            "direct loader framing recovered offline; exact live loader entry, sector "
-            "token and interrupted-write recovery remain gated"
+            "live loader handshake, identity and 02 FD application restore are hardware-validated; "
+            "sector token and interrupted-write recovery remain gated"
         ),
     ),
     "toolhead": FirmwareDeviceFamily(
@@ -162,10 +164,10 @@ DIRECT_MCU_FAMILIES = {
         update_request="01 FE",
         start_application="02 FD",
         runtime_identity="running nozzle_mcu Klipper/Kalico identity",
-        live_loader_entry="not yet hardware-validated",
+        live_loader_entry="hardware-validated on K2 Pro after GPIO140 MCU-rail power-cycle",
         recovery_status=(
-            "stock updater explicitly enters/exits transparent mode around RS-485 "
-            "peripheral updates; direct loader framing is recovered offline"
+            "live loader handshake, identity, transparent-mode entry/exit and 02 FD "
+            "application restore are hardware-validated on K2 Pro"
         ),
     ),
 }
@@ -181,6 +183,94 @@ def inspect_device_matrix() -> dict[str, Any]:
         },
         "tunneled_p2p": {
             name: asdict(item) for name, item in TUNNELED_P2P_FAMILIES.items()
+        },
+        "k2_pro_live_loader_probe": {
+            "date": "2026-10-04",
+            "entry": {
+                "gpio": 140,
+                "gpio_name": "MCU_PWR_EN",
+                "active_low": True,
+                "mechanism": "GPIO140 MCU_PWR_EN hardware power-cycle",
+                "sequence": "1 for 1.0 s, then 0, then 1.0 s settle",
+                "hardware_validated": True,
+            },
+            "transports": {
+                "main": {"port": "ttyS2", "baud": 115200},
+                "toolhead": {"port": "ttyS3", "baud": 115200},
+                "rs485": {"port": "ttyS5", "baud": 230400},
+            },
+            "identities": {
+                "main": {
+                    "hardware": "mcu0_120_G32",
+                    "application": "mcu0_001_000",
+                    "full": "mcu0_120_G32-mcu0_001_000",
+                },
+                "nozzle": {
+                    "hardware": "noz0_130_G30",
+                    "application": "noz0_021_000",
+                    "full": "noz0_130_G30-noz0_021_000",
+                },
+                "extruder": {
+                    "hardware": "mot2_022_C30",
+                    "application": "mot2_002_071",
+                    "full": "mot2_022_C30-mot2_002_071",
+                },
+                "xy_motors": {
+                    "count": 2,
+                    "hardware": "mot2_023_C30",
+                    "application": "mot2_002_071",
+                    "full": "mot2_023_C30-mot2_002_071",
+                },
+                "cfs": {
+                    "count": 1,
+                    "hardware": "cfs0_050_G32",
+                    "application": "cfs0_000_113",
+                    "full": "cfs0_050_G32-cfs0_000_113",
+                },
+                "belt_count": 0,
+                "rfid_count": 0,
+                # Compatibility aliases used by earlier schema consumers.
+                "toolhead": "noz0_130_G30-noz0_021_000",
+                "rs485_motors": [
+                    "mot2_023_C30-mot2_002_071",
+                    "mot2_023_C30-mot2_002_071",
+                ],
+            },
+            "rs485_counts": {
+                "motor": 2,
+                "cfs": 1,
+                "belt": 0,
+                "rfid": 0,
+            },
+            "loader_modes": {
+                "motor": 1,
+                "cfs": 1,
+            },
+            "restore": {
+                "main_start_app_ack": True,
+                "nozzle_start_app_ack": True,
+                "xy_start_app_ack_count": 2,
+                "cfs_start_app_ack": True,
+                "cfs_0b_01_fallback_sent": True,
+                "post_runtime_printer_ready": True,
+                "post_runtime_motor_ready": True,
+                "post_runtime_cfs": "IDLE/OK",
+                # Compatibility aliases.
+                "main_02_fd_ack": True,
+                "toolhead_02_fd_ack": True,
+                "motor_0x85_f0_02_ack": True,
+                "motor_0x86_f0_02_ack": True,
+                "cfs_0x01_f0_02_ack": True,
+                "final_printer_ready": True,
+            },
+            "safety": {
+                "erase_sent": False,
+                "update_request_sent": False,
+                "firmware_length_sent": False,
+                "firmware_data_sent": False,
+                "flash_allowed": False,
+                "device_uniids_published": False,
+            },
         },
         "jacob_k2_plus_reference": {
             "provenance": {
@@ -226,7 +316,7 @@ def inspect_device_matrix() -> dict[str, Any]:
                 "version_query": "00 ff",
                 "chunk_override": 256,
                 "explicit_start_app_after_extruder_update": False,
-                "k2_pro_equivalence": "not-yet-proven",
+                "k2_pro_equivalence": "loader identity transport hardware-validated on K2 Pro; write/update semantics remain gated",
             },
             "rs485": {
                 "reference_expected_counts": {
@@ -279,7 +369,7 @@ def inspect_device_matrix() -> dict[str, Any]:
                 "stock_expected_count": 2,
                 "first_temp_address": "0x85",
                 "proven_scope": "two motors on the stock RS-485 enumeration path",
-                "extruder_e_equivalence": "not-yet-proven",
+                "extruder_e_equivalence": "loader identity path hardware-validated on K2 Pro via Nozzle transparent P2P",
                 "jacob_k2_plus_reference": (
                     "E is updated with the P2P protocol through Nozzle transparent mode, "
                     "not through the RS-485 F0 stream; K2 Pro stock equivalence pending"
@@ -290,12 +380,12 @@ def inspect_device_matrix() -> dict[str, Any]:
                 "explicit F0/06 erase command"
             ),
             "loader_entry": (
-                "unresolved: stock mcu_util_485 only updates motors already reporting "
-                "mode=1; no host-side motor loader-entry command has been recovered"
+                "hardware-validated: GPIO140 MCU-rail power-cycle exposes two K2 Pro "
+                "RS-485 motors in A1 mode=1 without an application-side entry command"
             ),
             "bootloader_placement": (
-                "unresolved; motor application package contains its application token "
-                "but not the mot0 hardware/loader token"
+                "physical placement remains unresolved; live loader identity is "
+                "mot2_023_C30 for X/Y and mot2_022_C30 for E"
             ),
         },
         "toolhead_findings": {
@@ -316,10 +406,13 @@ def inspect_device_matrix() -> dict[str, Any]:
             "loader_lifecycle_proven_in_stock_host": True,
         },
         "safety": {
+            "motor_loader_entry_hardware_validated": True,
             "motor_loader_entry_enabled": False,
             "motor_write_enabled": False,
+            "direct_mcu_loader_entry_hardware_validated": True,
             "direct_mcu_loader_entry_enabled": False,
             "direct_mcu_write_enabled": False,
+            "extruder_loader_identity_hardware_validated": True,
             "flash_allowed": False,
         },
     }

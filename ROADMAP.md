@@ -25,7 +25,7 @@ Completed/validated:
 - CFS application identity added to `k2fw status` without exposing its serial/UniID;
 - CFS 1.1.3 runtime boot/hardware investigation completed: G30/G32 is absent from the byte-identical application images, and both bounded runtime `F0/00` probes returned `INVALID_PARAM`; stock `mcu_util_485` reaches its exact identity read after A1/A0 address management, so runtime status reports the boot variant as `unknown` rather than mutating address state;
 - unified `k2fw status` for Main + Nozzle + X/Y/E + CFS;
-- optional `k2fw status --manifest` comparison against an explicitly selected manifest, with exact package-provenance matching for Main/Nozzle and hardware-unresolved candidate listing for motors/CFS;
+- optional `k2fw status --manifest` comparison against an explicitly selected manifest; application-only motor/CFS records remain unresolved, while separately validated live loader identities can now resolve exact artifacts without enabling writes;
 - real `1.1.6.7.2` validation: Main/Nozzle package targets resolved, seven F012 motor candidates and two cfs0 CFS candidates remained unresolved, and every update decision stayed `null` / `flash_allowed=false`.
 
 Still required:
@@ -65,14 +65,17 @@ Still required:
 - prove device-side CFS loader reachability/recovery after interrupted erase/data transfer on recoverable hardware;
 - RS-485 device matrix recovered: motor=type 2/group 0xFD, belt=3/0xFC, RFID=4/0xFB, CFS=1/0xFE, CFS Pro=10/0xFE;
 - stock motor loader-mode gate recovered: A1 group `0xFD` uses payload `FD FD`, A1/A2 identity carries `device_type | mode | UniID`, and only type-2 devices with `mode=1` enter the firmware path;
-- stock motor enumeration expects exactly two type-2 devices on this path and assigns temporary addresses starting at `0x85`; this proves the two-device RS-485 path but does not yet prove E uses the same stock loader enumeration;
+- stock motor enumeration expects exactly two type-2 devices and assigns temporary addresses starting at `0x85`; live K2 Pro probing validates those two X/Y devices as `mot2_023_C30`, while E is independently proven on the Nozzle transparent P2P loader path as `mot2_022_C30`;
 - motor updater path confirmed to share A1/A0/F0 version-sector-update-data-start states with CFS, while explicit F0/06 erase is skipped for motors;
 - development X/Y/E read-only boot parameters confirmed identical: `boot_key=0x4286`, `system_startup_delay_ms=100`, `flash_key_write_retries_num=5`; the 0x4286 literal is absent from both old/new host updater binaries, and no boot-key write or reboot was performed;
 - motor package analysis confirms application token embedded at offset 0x200 while hardware/loader token remains package provenance; motor loader placement/entry remains unresolved;
-- Toolhead/Nozzle classified under the direct-mcu backend: stock loader lifecycle and transparent RS-485 bridge are proven, but live loader entry/sector/recovery remain gated;
+- Toolhead/Nozzle classified under the direct-mcu backend: stock lifecycle and live GPIO140 loader entry are proven; sector/write/interrupted-recovery behavior remains gated;
 - F012 Main and Toolhead/Nozzle images fingerprinted against upstream CanBoot/Katapult ABI constants: exact `CANBOOT_SIGNATURE` at `0x3e0` and `REQUEST_START_APP` at `0x3e8`; `REQUEST_CANBOOT` is absent, so reuse of boot-transition primitives is proven but upstream wire-protocol equivalence is not claimed;
 - offline `k2fw inspect-motor-loader-probe` added for the proven loader-present path only; it deliberately omits an unproven loader-entry command and keeps all write/send/flash gates false;
 - live K2 Pro application-state baseline: with Klipper ownership released, repeated motor A1 discovery (`f7 fd 05 00 a1 fd fd ce`) on the 230400 RS-485 path for 1.5 s returned zero bytes; loader discovery therefore was not exposed in the normal running-application state, strengthening the hardware power-on/reset hypothesis without proving GPIO140 fan-out or timing;
+- live K2 Pro hardware-entry probe now validates GPIO140 MCU-rail power-cycle as the loader gate: Main and Nozzle respond on P2P @115200, E responds through Nozzle transparent mode, two RS-485 motors and one CFS report A1 mode=1 @230400, and all observed applications were restored without erase/update/data;
+- exact 1.1.6.7.2 live-loader target resolution: Main/Nozzle already match; X/Y `mot2_023_C30` -> `mot2_002_081`, E `mot2_022_C30` -> `mot2_002_081`, CFS `cfs0_050_G32` -> `cfs0_000_150`; all write gates remain closed;
+- restore verification tightened: one Y runtime-address probe initially timed out after F0/02 and recovered through the normal motor-control retry path, proving that loader ACK must be followed by application-runtime verification;
 - multi-device architecture exposed by `k2fw device-matrix`;
 - implement remaining frame codecs with unit tests and captured fixtures;
 - stock CFS/Box reset orchestration recovered from both compared `upgrade-server` generations: stop Klipper -> run byte-identical `mcu_reset.sh` -> `CFS=1 /etc/init.d/mcu_update start` -> inspect `/tmp/.485_mcu_version`;

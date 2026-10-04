@@ -18,7 +18,7 @@ device_type | mode | 12-byte UniID
 
 For motors `device_type=2`. Stock `mcu_util_485` only selects a device for firmware update when `mode==1` (loader). A motor reporting `mode==0` (application) is not sent through the firmware path.
 
-This proves that the stock updater expects the motor to be in loader state before the F0 update phase. No host-side motor loader-entry command has been recovered.
+This proves that the stock updater expects the motor to be in loader state before the F0 update phase. No application-side loader-entry command has been recovered; however, a guarded live K2 Pro test now proves that a GPIO140 / MCU_PWR_EN hardware power-cycle exposes both RS-485 motors in `mode=1`.
 
 ## Temporary loader addresses
 
@@ -30,7 +30,7 @@ First-device A0 template:
 F7 FD 10 00 A0 85 <12-byte-UniID> CRC
 ```
 
-The two-device count proves the path for the stock X/Y bus enumeration. The E motor is known to use the same runtime motor application protocol through the Toolhead transparent transport, but equivalence of its stock loader enumeration has not yet been proven.
+The two-device count is now hardware-validated for the K2 Pro X/Y bus. Both devices identify in loader as `mot2_023_C30-mot2_002_071`. E is not part of that RS-485 loader enumeration: after the same power-cycle it is read through Nozzle transparent mode with the P2P loader protocol and identifies as `mot2_022_C30-mot2_002_071`.
 
 ## Motor F0 path
 
@@ -70,7 +70,7 @@ RAM and flash readbacks match for these parameters.
 
 `boot_key`, `system_startup_delay_ms`, and `flash_key_write_retries_num` are registered by both analysed 071 and 081 applications. Static application cross-references do not show ordinary consumption of those values beyond registration. The literal `0x4286` is absent from both old and new stock host updater binaries.
 
-This is consistent with controller/loader-side boot coordination, but does not prove what value selects loader mode or whether `0x4286` is an entry key, an unlock key, or another boot policy field. No boot-key write or motor reset has been performed.
+This remains consistent with controller/loader-side boot coordination, but the live hardware probe shows that no boot-key write is required to expose the loaders: GPIO140 power-cycle alone is sufficient. The exact semantic meaning of `0x4286` remains unresolved.
 
 ## Offline command
 
@@ -78,13 +78,18 @@ This is consistent with controller/loader-side boot coordination, but does not p
 python -m k2fw inspect-motor-loader-probe
 ```
 
-The command renders only the proven loader-present path. It deliberately omits any loader-entry transaction and always reports serial I/O, erase, update request, data transfer, and flash support as disabled.
+The command remains an offline renderer for the loader-present RS-485 path. It does not perform the now-validated GPIO140 maintenance power-cycle and always reports serial I/O, erase, update request, data transfer, and flash support as disabled.
 
-## Remaining gate
+## Live entry validation and remaining gates
 
-Before a live motor loader probe can exist, at least one of the following must be proven independently:
+A guarded K2 Pro maintenance probe now validates:
 
-- a non-destructive command that moves an application motor into loader mode; or
-- a controlled reset/power sequence that reliably produces `mode=1`, with a proven application-restore path.
+- GPIO140 power-cycle -> two X/Y loader replies in `mode=1`;
+- A0 temporary addresses `0x85` / `0x86`;
+- F0/00 identities `mot2_023_C30-mot2_002_071`;
+- F0/02 application-start ACK on both devices;
+- post-restore application recovery through normal `motor_control` startup.
 
-Until then, motor loader entry and all motor writes remain disabled.
+One Y runtime address probe timed out immediately after restore and recovered on the normal motor-control retry path. Therefore F0/02 ACK alone is not treated as sufficient application-readiness proof.
+
+The loader-entry gate is closed as a research question, but write support remains disabled until motor sector/chunk behavior, write preparation/erase semantics, post-write verification and interrupted-write recovery are hardware-validated.
