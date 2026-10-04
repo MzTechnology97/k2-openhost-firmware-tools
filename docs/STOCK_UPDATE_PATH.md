@@ -119,7 +119,7 @@ Disassembly of `mcu_util_485` (1.1.0.94, function at `0x13450`, called once per 
 
 The `fw` path is not checked against the unit's boot/hardware token by this function, so the caller must choose it. A second function (`0x1366c`) reads `<fw dir>/../cfs/version.json` (`CFSs[].boot_ver/app_ver`) and builds `%s/%s/%s.bin`. It is reached for an application version of `000_000`, the recovery path for a unit without a valid application.
 
-K2-OpenHost's `k2oh-mcu-fw apply --cfs` (installer helper, slot B) uses this format. It takes UniID and loader identity only from `/tmp/.485_mcu_version` written by the stock tool after a power-cycled first pass, and picks the file by exact hardware token (in 1.1.7.0 `cfs0_050_G30` → `cfs0_000_150`, `cfs0_050_G32` → `cfs0_000_153`). Not yet validated on hardware.
+K2-OpenHost's `k2oh-mcu-fw apply --cfs` ([k2-openhost-t113-bootstrap](https://github.com/MzTechnology97/k2-openhost-t113-bootstrap), slot B) uses this format. It takes UniID and loader identity only from `/tmp/.485_mcu_version` written by the stock tool after a power-cycled first pass, and picks the file by exact hardware token (in 1.1.7.0 `cfs0_050_G30` → `cfs0_000_150`, `cfs0_050_G32` → `cfs0_000_153`). Not yet validated on hardware.
 
 ## OTA server evidence
 
