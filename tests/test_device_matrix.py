@@ -73,3 +73,30 @@ def test_toolhead_is_a_direct_mcu_backend_not_the_rs485_updater():
     assert boot["request_canboot_present"] is False
     assert "wire protocol/bootloader identity is not proven" in boot["interpretation"]
     assert findings["loader_lifecycle_proven_in_stock_host"] is True
+
+def test_jacob_k2_plus_reference_is_model_scoped_and_keeps_e_separate():
+    result = inspect_device_matrix()
+    ref = result["jacob_k2_plus_reference"]
+    assert ref["provenance"]["scope"].startswith("reference implementation")
+    assert ref["boot_orchestration"]["gpio"] == 140
+    assert ref["boot_orchestration"]["active_low"] is True
+    assert ref["parallel_transports"]["rs485"]["baud"] == 230400
+    assert ref["parallel_transports"]["main_p2p"]["baud"] == 115200
+    assert ref["parallel_transports"]["nozzle_p2p"]["baud"] == 115200
+
+    e = result["tunneled_p2p"]["extruder"]
+    assert "transparent mode" in e["transport"]
+    assert e["loader_identity_query"] == "00 FF after Nozzle 04 FB transparent mode"
+    assert e["sector_query"] == "03 FC"
+    assert e["update_request"] == "01 FE"
+    assert "not explicitly sent" in e["start_application"]
+
+    extruder_ref = ref["extruder"]
+    assert extruder_ref["separate_0x75_handshake_in_reference"] is False
+    assert extruder_ref["chunk_override"] == 256
+    assert extruder_ref["explicit_start_app_after_extruder_update"] is False
+    assert extruder_ref["k2_pro_equivalence"] == "not-yet-proven"
+
+    counts = ref["rs485"]["reference_expected_counts"]
+    assert counts == {"motor": 4, "belt": 2, "rfid": 1, "cfs": 4}
+    assert "must not replace" in ref["rs485"]["note"]
