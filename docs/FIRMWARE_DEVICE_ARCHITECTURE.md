@@ -74,3 +74,21 @@ k2fw
 Each family must independently define runtime identity, loader identity, loader entry, sector/chunk semantics, erase policy, update framing, startup verification and interrupted-update recovery.
 
 Current write gates remain closed: CFS loader probing is validated but CFS writes are disabled; motor loader entry/writes are disabled; Main/Toolhead loader entry/writes are disabled.
+
+## K2 Pro live loader-entry validation (2026-10-04)
+
+A hardware power-cycle through T113 `GPIO140 / MCU_PWR_EN` was executed with Klipper stopped and the three T113 UART bridges released. After `GPIO140=1` for 1 s, then `GPIO140=0` and a 1 s settle, the following loader identities were read without erase/update/data transfer:
+
+- Main P2P @ 115200: `mcu0_120_G32-mcu0_001_000`
+- Toolhead/Nozzle P2P @ 115200: `noz0_130_G30-noz0_021_000`
+- Extruder E through Nozzle transparent mode: `mot2_022_C30-mot2_002_071`
+- two RS-485 motors @ 230400: `mot2_023_C30-mot2_002_071`
+- one CFS: `cfs0_050_G32-cfs0_000_113`
+
+Both RS-485 motors and the CFS reported loader `mode=1` during A1 discovery. Belt and RFID groups returned no devices on this K2 Pro.
+
+Application restore was acknowledged by Main/Nozzle `02 FD`, both motor `F0/02` requests and CFS `F0/02`; the proven CFS `0B/01` fallback was also sent. The printer returned to `ready/standby` with all heater targets at zero.
+
+This proves the hardware loader-entry mechanism and the K2 Pro E P2P path. It does **not** enable write/erase/update support; those gates remain closed.
+
+See `LIVE_LOADER_IDENTITY.md` for the guarded 2026-10-04 hardware validation and exact K2 Pro loader identities.

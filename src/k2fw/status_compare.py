@@ -31,6 +31,64 @@ def _applications(items: list[dict[str, Any]]) -> list[str]:
     })
 
 
+def _compare_exact_loader_identity(
+    device: dict[str, Any],
+    artifacts: list[dict[str, Any]],
+) -> dict[str, Any] | None:
+    identity = device.get("loader_identity") or {}
+    hardware = identity.get("hardware")
+    application = identity.get("application")
+    if not hardware:
+        return None
+
+    name = str(device.get("device", ""))
+    if name == "main":
+        kind = "main_mcu"
+    elif name == "nozzle":
+        kind = "nozzle_mcu"
+    elif name.startswith("motor_"):
+        kind = "motor"
+    elif name.startswith("cfs_"):
+        kind = "cfs"
+    else:
+        return None
+
+    matches = [
+        item for item in artifacts
+        if item.get("hardware") == hardware and item.get("kind") == kind
+    ]
+    result = {
+        "mode": "live-loader-identity",
+        "status": "no-exact-target",
+        "exact_hardware": hardware,
+        "runtime_application": application,
+        "runtime_hardware_verified": True,
+        "target_selection": "unresolved",
+        "update_required": None,
+        "flash_allowed": False,
+        "candidates": [_artifact_view(item) for item in matches],
+    }
+    if not matches:
+        return result
+    if len(matches) != 1:
+        result["status"] = "ambiguous-exact-target"
+        return result
+
+    target = matches[0]
+    target_application = target.get("application")
+    result.update({
+        "status": "exact-target-present",
+        "target_selection": "resolved-from-live-loader-identity",
+        "target_application": target_application,
+        "artifact": _artifact_view(target),
+        "update_required": (
+            None if application is None or target_application is None
+            else str(application) != str(target_application)
+        ),
+    })
+    return result
+
+
 def _compare_direct_mcu(
     device: dict[str, Any],
     artifacts: list[dict[str, Any]],
@@ -160,10 +218,12 @@ def compare_live_status_to_manifest(
     artifacts = list(manifest.get("artifacts", []))
 
     for device in result.get("devices", []):
-        if device.get("device") in DEVICE_KINDS:
-            comparison = _compare_direct_mcu(device, artifacts)
-        else:
-            comparison = _compare_application_fingerprint(device, artifacts)
+        comparison = _compare_exact_loader_identity(device, artifacts)
+        if comparison is None:
+            if device.get("device") in DEVICE_KINDS:
+                comparison = _compare_direct_mcu(device, artifacts)
+            else:
+                comparison = _compare_application_fingerprint(device, artifacts)
         device["manifest_comparison"] = comparison
 
     result["manifest_comparison"] = {
@@ -172,8 +232,9 @@ def compare_live_status_to_manifest(
         "manifest_release": manifest.get("release"),
         "artifact_count": len(artifacts),
         "target_selection_policy": (
-            "exact package provenance for Main/Nozzle; application fingerprints "
-            "remain unresolved for motors/CFS without exact hardware identity"
+            "prefer live loader hardware identity when present; otherwise use "
+            "package provenance for Main/Nozzle and leave application-only "
+            "motor/CFS fingerprints unresolved"
         ),
         "update_decisions_enabled": False,
         "write_enabled": False,

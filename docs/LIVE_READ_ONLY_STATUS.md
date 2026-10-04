@@ -105,6 +105,21 @@ The separate CFS runtime probe remains available as `probe-cfs` and requires exp
 
 ## Compare with an explicitly selected manifest
 
-`k2fw status --manifest firmware.json` adds a read-only manifest comparison to the same live report. Main and Nozzle use their unique F012 package provenance but keep `runtime_hardware_verified=false`; motor and CFS application fingerprints only produce candidate lists until exact hardware identity is known.
+`k2fw status --manifest firmware.json` adds a read-only manifest comparison to the same live report. Main and Nozzle use package provenance when no live loader identity is attached; motor/CFS application fingerprints still produce candidate lists when hardware is unknown. A separately validated loader probe may attach exact `loader_identity.hardware`, in which case the comparator resolves one exact artifact and may report an application-version difference while keeping `flash_allowed=false`.
 
 The comparator intentionally leaves `update_required=null` where live hardware identity is not sufficient and always returns `flash_allowed=false`. See `MANIFEST_COMPARISON.md` for the full matching policy and the validation against the extracted K2 Pro `1.1.6.7.2` firmware.
+
+
+## Separately validated loader identities
+
+A guarded GPIO140 maintenance probe on 2026-10-04 established exact loader identities that are intentionally kept separate from ordinary `status` collection:
+
+```text
+Main:   mcu0_120_G32-mcu0_001_000
+Nozzle: noz0_130_G30-noz0_021_000
+X/Y:    mot2_023_C30-mot2_002_071  (two RS-485 devices)
+E:      mot2_022_C30-mot2_002_071  (Nozzle transparent P2P)
+CFS:    cfs0_050_G32-cfs0_000_113
+```
+
+The maintenance probe is state-changing because it power-cycles `MCU_PWR_EN` and performs temporary loader address assignment. It is therefore not part of the ordinary read-only `status` path. See `LIVE_LOADER_IDENTITY.md`.

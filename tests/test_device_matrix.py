@@ -43,10 +43,11 @@ def test_motor_live_observations_are_read_only_and_writes_remain_disabled():
     assert enumeration["required_mode"] == 1
     assert enumeration["stock_expected_count"] == 2
     assert enumeration["first_temp_address"] == "0x85"
-    assert enumeration["extruder_e_equivalence"] == "not-yet-proven"
-    assert "no host-side motor loader-entry command" in motor["loader_entry"]
+    assert "hardware-validated" in enumeration["extruder_e_equivalence"]
+    assert "GPIO140 MCU-rail power-cycle" in motor["loader_entry"]
 
     safety = result["safety"]
+    assert safety["motor_loader_entry_hardware_validated"] is True
     assert safety["motor_loader_entry_enabled"] is False
     assert safety["motor_write_enabled"] is False
     assert safety["flash_allowed"] is False
@@ -95,8 +96,75 @@ def test_jacob_k2_plus_reference_is_model_scoped_and_keeps_e_separate():
     assert extruder_ref["separate_0x75_handshake_in_reference"] is False
     assert extruder_ref["chunk_override"] == 256
     assert extruder_ref["explicit_start_app_after_extruder_update"] is False
-    assert extruder_ref["k2_pro_equivalence"] == "not-yet-proven"
+    assert "hardware-validated" in extruder_ref["k2_pro_equivalence"]
 
     counts = ref["rs485"]["reference_expected_counts"]
     assert counts == {"motor": 4, "belt": 2, "rfid": 1, "cfs": 4}
     assert "must not replace" in ref["rs485"]["note"]
+
+def test_k2_pro_live_loader_probe_records_real_identities_and_safe_restore():
+    result = inspect_device_matrix()
+    live = result["k2_pro_live_loader_probe"]
+
+    assert live["entry"]["hardware_validated"] is True
+    assert live["entry"]["mechanism"] == "GPIO140 MCU_PWR_EN hardware power-cycle"
+    assert live["transports"]["main"]["baud"] == 115200
+    assert live["transports"]["toolhead"]["baud"] == 115200
+    assert live["transports"]["rs485"]["baud"] == 230400
+
+    ids = live["identities"]
+    assert ids["main"]["full"] == "mcu0_120_G32-mcu0_001_000"
+    assert ids["nozzle"]["full"] == "noz0_130_G30-noz0_021_000"
+    assert ids["extruder"]["full"] == "mot2_022_C30-mot2_002_071"
+    assert ids["xy_motors"]["count"] == 2
+    assert ids["xy_motors"]["full"] == "mot2_023_C30-mot2_002_071"
+    assert ids["cfs"]["full"] == "cfs0_050_G32-cfs0_000_113"
+    assert live["rs485_counts"] == {"motor": 2, "cfs": 1, "belt": 0, "rfid": 0}
+    assert live["loader_modes"] == {"motor": 1, "cfs": 1}
+
+    restore = live["restore"]
+    assert restore["main_02_fd_ack"] is True
+    assert restore["toolhead_02_fd_ack"] is True
+    assert restore["motor_0x85_f0_02_ack"] is True
+    assert restore["motor_0x86_f0_02_ack"] is True
+    assert restore["cfs_0x01_f0_02_ack"] is True
+    assert restore["cfs_0b_01_fallback_sent"] is True
+    assert restore["final_printer_ready"] is True
+
+    safety = live["safety"]
+    assert safety["erase_sent"] is False
+    assert safety["update_request_sent"] is False
+    assert safety["firmware_length_sent"] is False
+    assert safety["firmware_data_sent"] is False
+    assert safety["flash_allowed"] is False
+    assert safety["device_uniids_published"] is False
+
+def test_k2_pro_live_loader_probe_records_all_validated_identities_without_flash():
+    result = inspect_device_matrix()
+    probe = result["k2_pro_live_loader_probe"]
+    assert probe["entry"]["gpio"] == 140
+    assert probe["entry"]["active_low"] is True
+    assert probe["entry"]["hardware_validated"] is True
+    identities = probe["identities"]
+    assert identities["main"]["hardware"] == "mcu0_120_G32"
+    assert identities["nozzle"]["hardware"] == "noz0_130_G30"
+    assert identities["extruder"]["hardware"] == "mot2_022_C30"
+    assert identities["xy_motors"]["count"] == 2
+    assert identities["xy_motors"]["hardware"] == "mot2_023_C30"
+    assert identities["cfs"]["hardware"] == "cfs0_050_G32"
+    assert identities["belt_count"] == 0
+    assert identities["rfid_count"] == 0
+    restore = probe["restore"]
+    assert restore["main_start_app_ack"] is True
+    assert restore["nozzle_start_app_ack"] is True
+    assert restore["xy_start_app_ack_count"] == 2
+    assert restore["cfs_start_app_ack"] is True
+    assert restore["post_runtime_printer_ready"] is True
+    assert restore["post_runtime_motor_ready"] is True
+    assert restore["post_runtime_cfs"] == "IDLE/OK"
+    safety = probe["safety"]
+    assert safety["erase_sent"] is False
+    assert safety["update_request_sent"] is False
+    assert safety["firmware_length_sent"] is False
+    assert safety["firmware_data_sent"] is False
+    assert safety["flash_allowed"] is False

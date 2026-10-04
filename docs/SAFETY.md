@@ -30,7 +30,7 @@ The validated X/Y/E runtime fingerprint does **not** open `/dev/ttyUSB2` directl
 
 The direct Main/Nozzle `mcu_util` identity command is also excluded from runtime probing. Its `00 FF` version request follows a loader handshake and stock `mcu_update` explicitly starts the application afterward. `k2fw status` may report the unique F012 package target for each role, but it marks that target `runtime_verified=false` and never presents it as a live bootloader read.
 
-Manifest comparison is also non-authoritative for flashing. `--manifest` only compares an operator-selected manifest with the live evidence already available. Package provenance may resolve a filename without proving the running bootloader identity, while application-only motor/CFS matches remain hardware-unresolved. The comparator never promotes these observations into a flash decision.
+Manifest comparison is also non-authoritative for flashing. `--manifest` only compares an operator-selected manifest with the live evidence already available. Application-only motor/CFS matches remain hardware-unresolved; a separately validated `loader_identity` may resolve an exact artifact and `update_required`, but it still never enables writes or `flash_allowed`.
 
 The stock updater's `F0/00` command is documented as protocol evidence but is not exposed as the normal runtime motor probe. A live application-mode motor test produced no response, so `k2fw status` deliberately uses the validated parameter read instead.
 
@@ -40,7 +40,7 @@ For CFS 1.1.3, bounded `F0/00` probes with both tested headers returned `INVALID
 
 Both compared stock OTA servers stop Klipper and invoke `/usr/bin/mcu_reset.sh` before the CFS-specific `mcu_update` pass. That script drives GPIO 140 / PE12 (`MCU_PWR_EN`) high for two seconds (power off) and then low (power on). It is a physical power-cycle, not an identity/status query.
 
-K2-OpenHost therefore never calls `mcu_reset.sh` from `status`, `probe-*`, preflight, or either offline update inspector. The exact electrical fan-out of GPIO 140 is not inferred from the script name alone. See `STOCK_RESET_ORCHESTRATION.md`.
+K2-OpenHost still never calls `mcu_reset.sh` from ordinary `status` or the offline inspectors. A separately guarded maintenance probe has now hardware-validated the GPIO140 power-cycle as loader entry for Main, Nozzle, E, X/Y and CFS. This remains a state-changing maintenance operation, not a normal read-only status primitive. See `LIVE_LOADER_IDENTITY.md` and `STOCK_RESET_ORCHESTRATION.md`.
 
 ## Interrupted RS-485 update risk
 
@@ -66,6 +66,10 @@ The loader identity/sector workflow is **non-flash but state-changing**. Enterin
 
 ## Motor and Toolhead loader gates
 
-Motors share the stock `mcu_util_485` F0 loader state machine with CFS but have a different erase policy: device type 2 does not receive the explicit `F0/06` erase. Stock discovery proves a two-device type-2 path at group `0xFD`; only replies already reporting `mode=1` are eligible for firmware handling. X/Y/E application-level reads confirm `boot_key=0x4286`, `system_startup_delay_ms=100` and `flash_key_write_retries_num=5`, but the host updater does not contain the 0x4286 literal. `inspect-motor-loader-probe` is therefore offline only. K2-OpenHost must not write the boot key, reset a motor, assign live loader addresses or send F0 update traffic until the entry and recovery rules are proven. The exact stock loader path for E remains independently gated.
+GPIO140 hardware power-cycle has now been validated as a common loader-entry mechanism on the development K2 Pro. Two X/Y-class RS-485 motors answer A1 group `0xFD` in `mode=1` and identify as `mot2_023_C30-mot2_002_071`. E identifies separately as `mot2_022_C30-mot2_002_071` through Nozzle P2P transparent mode. Main and Nozzle also answer the direct P2P loader identity query after the same power-cycle.
 
-Main and Toolhead/Nozzle use the separate direct `mcu_util` loader backend. Their stock F012 images contain exact CanBoot/Katapult boot-transition ABI constants, but this does not prove upstream Katapult wire-protocol equivalence. The live loader-entry trigger, real sector token and interrupted-update recovery are not yet validated. No direct-MCU live loader entry or firmware write is enabled.
+This closes the loader-entry/identity gate but **not** the write/recovery gates. Motors still have unresolved sector/write-preparation semantics, E still lacks K2 Pro write-path validation, and Main/Nozzle real sector tokens plus interrupted-write recovery remain unproven.
+
+Application restore must be verified beyond the ACK. During the validated probe both X/Y returned `F0/02` ACK; one Y runtime address probe initially timed out, then the normal motor-control retry path recovered and `motor_ready=true`. CFS similarly retains its stronger A2/`0B/01` verification requirement.
+
+No firmware write is enabled.

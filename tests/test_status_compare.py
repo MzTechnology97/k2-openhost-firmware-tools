@@ -171,3 +171,62 @@ def test_top_level_manifest_comparison_never_enables_decisions_or_writes():
     assert meta["update_decisions_enabled"] is False
     assert meta["write_enabled"] is False
     assert meta["flash_allowed"] is False
+
+def test_live_loader_identity_resolves_exact_motor_target_without_enabling_flash():
+    live = _live_status()
+    live["devices"][2]["loader_identity"] = {
+        "hardware": "mot2_023_C30",
+        "application": "mot2_002_071",
+        "source": "live-loader-probe",
+    }
+    manifest = _manifest()
+    manifest["artifacts"].append(_artifact(
+        "F012/motor/mot2_023_C30-mot2_002_081.bin",
+        "mot2_023_C30",
+        "mot2_002_081",
+        "motor",
+        "1",
+    ))
+    result = compare_live_status_to_manifest(live, manifest)
+    motor = result["devices"][2]["manifest_comparison"]
+    assert motor["mode"] == "live-loader-identity"
+    assert motor["status"] == "exact-target-present"
+    assert motor["exact_hardware"] == "mot2_023_C30"
+    assert motor["runtime_hardware_verified"] is True
+    assert motor["runtime_application"] == "mot2_002_071"
+    assert motor["target_application"] == "mot2_002_081"
+    assert motor["update_required"] is True
+    assert motor["target_selection"] == "resolved-from-live-loader-identity"
+    assert motor["flash_allowed"] is False
+
+
+def test_live_loader_identity_resolves_exact_cfs_variant():
+    live = _live_status()
+    live["devices"][3]["loader_identity"] = {
+        "hardware": "cfs0_050_G32",
+        "application": "cfs0_000_113",
+        "source": "live-loader-probe",
+    }
+    result = compare_live_status_to_manifest(live, _manifest())
+    cfs = result["devices"][3]["manifest_comparison"]
+    assert cfs["mode"] == "live-loader-identity"
+    assert cfs["status"] == "exact-target-present"
+    assert cfs["exact_hardware"] == "cfs0_050_G32"
+    assert cfs["target_application"] == "cfs0_000_150"
+    assert cfs["update_required"] is True
+    assert cfs["flash_allowed"] is False
+
+
+def test_live_loader_identity_overrides_package_provenance_for_direct_mcu():
+    live = _live_status()
+    live["devices"][0]["loader_identity"] = {
+        "hardware": "mcu0_120_G32",
+        "application": "mcu0_001_000",
+        "source": "live-loader-probe",
+    }
+    result = compare_live_status_to_manifest(live, _manifest())
+    main = result["devices"][0]["manifest_comparison"]
+    assert main["mode"] == "live-loader-identity"
+    assert main["runtime_hardware_verified"] is True
+    assert main["update_required"] is False
+    assert main["flash_allowed"] is False
