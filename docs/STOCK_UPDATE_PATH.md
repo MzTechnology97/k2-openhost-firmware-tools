@@ -105,6 +105,22 @@ Forced receive-handler decompilation clarifies the later CFS update lifecycle: s
 
 During a CFS-targeted OTA, `upgrade-server` creates `/tmp/cfs_update.json` and starts the service with `CFS=1`, causing `mcu_update` to add `-j /tmp/cfs_update.json`.
 
+### `cfs_update.json` format (recovered statically, 1.1.0.94)
+
+Disassembly of `mcu_util_485` (1.1.0.94, function at `0x13450`, called once per CFS found in loader mode) recovers how the `-j` file is read:
+
+1. The unit's 12-byte UniID (bytes 1–12 of its identity record) is formatted with `"%02x "` into a stack buffer. The byte at offset 35 is then set to NUL, so the string is the 12 bytes as **lowercase hex separated by single spaces, no trailing space** (35 characters). This is the same format as the `uuid` fields of `/tmp/.485_mcu_version`.
+2. `json_object_object_get(root, "CFSs")` returns an array. For each element `json_object_array_get_idx`, then `json_object_object_get(elem, "uuid")` and `json_object_object_get(elem, "fw")`; both must be strings.
+3. `strncmp(unit_uuid, elem.uuid, 0x23)`: on a match, `strdup(elem.fw)` and `open(elem.fw, O_RDONLY)`. That file is the image streamed to the unit. A failed open logs `open file %s failed!`.
+
+```json
+{"CFSs": [{"uuid": "aa bb cc dd ee ff 00 11 22 33 44 55", "fw": "/usr/share/klipper/fw/cfs/cfs0_050_G32-cfs0_000_153.bin"}]}
+```
+
+The `fw` path is not checked against the unit's boot/hardware token by this function, so the caller must choose it. A second function (`0x1366c`) reads `<fw dir>/../cfs/version.json` (`CFSs[].boot_ver/app_ver`) and builds `%s/%s/%s.bin`. It is reached for an application version of `000_000`, the recovery path for a unit without a valid application.
+
+K2-OpenHost's `k2oh-mcu-fw apply --cfs` (installer helper, slot B) uses this format. It takes UniID and loader identity only from `/tmp/.485_mcu_version` written by the stock tool after a power-cycled first pass, and picks the file by exact hardware token (in 1.1.7.0 `cfs0_050_G30` → `cfs0_000_150`, `cfs0_050_G32` → `cfs0_000_153`). Not yet validated on hardware.
+
 ## OTA server evidence
 
 Static strings in `/usr/bin/upgrade-server` include:
