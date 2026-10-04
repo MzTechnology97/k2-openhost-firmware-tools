@@ -112,4 +112,4 @@ See `docs/LIVE_READ_ONLY_STATUS.md` for the validated live probes, `docs/MANIFES
 
 ## Project relationship
 
-This repository is part of the K2-OpenHost project and is separate from the Kalico, Mainsail and Cartographer forks. Original Creality firmware remains Creality software; this repository stores only independently written tooling, documentation, hashes and metadata derived from user-supplied images.
+This repository is part of the K2-OpenHost project and is separate from the Kalico and Mainsail forks and the Cartographer plugin. Original Creality firmware remains Creality software; this repository stores only independently written tooling, documentation, hashes and metadata derived from user-supplied images.
