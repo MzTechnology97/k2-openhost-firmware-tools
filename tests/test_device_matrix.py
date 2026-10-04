@@ -216,3 +216,34 @@ def test_k2_pro_live_sector_metadata_is_exact_and_write_gates_stay_closed():
     assert top["motor_write_enabled"] is False
     assert top["direct_mcu_write_enabled"] is False
     assert top["flash_allowed"] is False
+
+def test_k2_pro_transfer_geometry_matches_live_tokens_and_manifest_sizes():
+    result = inspect_device_matrix()
+    geom = result["k2_pro_live_loader_probe"]["transfer_geometry_1_1_6_7_2"]
+    assert geom["main"] == {"size": 30948, "chunk_size": 2048, "chunk_count": 16, "tail_size": 228, "update_required": False}
+    assert geom["nozzle"] == {"size": 30872, "chunk_size": 2048, "chunk_count": 16, "tail_size": 152, "update_required": False}
+    assert geom["extruder"]["size"] == 116412
+    assert geom["extruder"]["chunk_size"] == 256
+    assert geom["extruder"]["chunk_count"] == 455
+    assert geom["extruder"]["tail_size"] == 188
+    assert geom["extruder"]["update_required"] is True
+    xy = geom["xy_motors"]
+    assert xy["per_motor_size"] == 116396
+    assert xy["chunk_size"] == 128
+    assert xy["chunk_count_per_motor"] == 910
+    assert xy["tail_size"] == 44
+    assert xy["device_count"] == 2
+    assert xy["update_required"] is True
+    cfs = geom["cfs"]
+    assert cfs["size"] == 175104
+    assert cfs["chunk_size"] == 128
+    assert cfs["chunk_count"] == 1368
+    assert cfs["tail_size"] == 128
+    assert cfs["full_chunks_only"] is True
+    assert cfs["update_required"] is True
+    assert geom["flash_allowed"] is False
+    assert 2048 * 15 + 228 == geom["main"]["size"]
+    assert 2048 * 15 + 152 == geom["nozzle"]["size"]
+    assert 256 * 454 + 188 == geom["extruder"]["size"]
+    assert 128 * 909 + 44 == xy["per_motor_size"]
+    assert 128 * 1368 == cfs["size"]

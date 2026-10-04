@@ -76,6 +76,7 @@ Still required:
 - live K2 Pro hardware-entry probe now validates GPIO140 MCU-rail power-cycle as the loader gate: Main and Nozzle respond on P2P @115200, E responds through Nozzle transparent mode, two RS-485 motors and one CFS report A1 mode=1 @230400, and all observed applications were restored without erase/update/data;
 - post-restore runtime verification passed: `motor_ready=true`, both motor transports ready, CFS `IDLE/OK`, printer `ready/standby`, heater targets zero;
 - live sector/chunk metadata hardware-validated without write commands: Main `0x02` -> 2048 B, Nozzle `0x02` -> 2048 B, E `0xC0` -> 256 B, X/Y `0xE0` -> 128 B, CFS `0xE0` -> 128 B;
+- exact 1.1.6.7.2 transfer geometry derived offline from live tokens + manifest sizes: Main 16 chunks, Nozzle 16, E 455, X/Y 910 each, CFS 1368 full chunks; no write path enabled;
 - E's live 256-byte sector result exactly matches Jacob's prior 256-byte override;
 - host-side write-preparation boundary resolved: Main/Nozzle/E first mutate at `01 FE`; X/Y first mutate at `F0/01` and receive no `F0/06`; CFS alone receives explicit `F0/06` before `F0/01`;
 - next gated work is device-internal preparation/erase semantics, post-write verification and interrupted-write recovery, not firmware write enablement;

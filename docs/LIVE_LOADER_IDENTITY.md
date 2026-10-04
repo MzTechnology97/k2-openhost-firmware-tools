@@ -119,3 +119,17 @@ Still not validated:
 - any actual erase or firmware write.
 
 No flash command is enabled.
+
+## Exact transfer geometry for 1.1.6.7.2
+
+Using the live sector tokens above and the exact extracted target sizes:
+
+| Role | Target bytes | Chunk | Chunks | Tail | Update needed |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Main | 30,948 | 2,048 | 16 | 228 | no |
+| Nozzle | 30,872 | 2,048 | 16 | 152 | no |
+| Extruder E | 116,412 | 256 | 455 | 188 | yes |
+| X/Y (each) | 116,396 | 128 | 910 | 44 | yes |
+| CFS | 175,104 | 128 | 1,368 | 128 | yes |
+
+For CFS the final chunk is a full 128-byte chunk, so the transfer has no partial tail. These numbers describe transfer geometry only; they do not authorize or execute a write. `flash_allowed=false` remains mandatory.
