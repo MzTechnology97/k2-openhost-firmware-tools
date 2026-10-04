@@ -68,6 +68,7 @@ python -m k2fw resolve firmware.json \
 For live state while Kalico is running:
 
 ```bash
+python -m k2fw preflight --port /dev/serial/by-id/<gadget>-if02-port0   # read-only; see docs/SAFETY.md
 python -m k2fw probe-mcus
 python -m k2fw probe-motors
 python -m k2fw status

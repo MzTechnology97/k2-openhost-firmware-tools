@@ -36,6 +36,33 @@ The stock updater's `F0/00` command is documented as protocol evidence but is no
 
 For CFS 1.1.3, bounded `F0/00` probes with both tested headers returned `INVALID_PARAM`. Stock exact-identity discovery proceeds through A1/A0 address management; because A0 changes bus address state, the read-only tooling does not reproduce it. Future CFS write support must obtain the exact boot/hardware variant from a non-mutating source or require explicit, independently verified target provenance.
 
+## Flash preflight
+
+`python -m k2fw preflight --port <path> [--port <path> ...]` is a read-only precondition check. It answers one question: is the printer in a state where flashing may be considered? It does **not** prove that an image fits the hardware, and it does not enable any write: `flash_allowed` and the write gates above are unchanged.
+
+`safe_for_flash` is true only when every fact is known and good:
+
+| Check | Pass | Fail | Unknown (blocks too) |
+| --- | --- | --- | --- |
+| `machine_idle` | `print_stats.state` is `standby`, `complete`, `cancelled` or `error` | `printing` or `paused` | `print_stats` or its state missing, not a string, or any other value |
+| `heaters_off` | `extruder`, `heater_bed` and `heater_generic chamber_heater` all have a finite target of 0 | a target above 0 | an object or target missing, `null`, a string, a boolean, NaN, infinity or a negative number |
+| `serial_exclusive` | every `--port` exists and no process holds it, with every `/proc/<pid>/fd` inspected | a process holds a port | no `--port` given, a port missing, or a process that could not be inspected (run as root) |
+
+The idle states follow Klipper's `print_stats`. `error` is included because it is the state a print is left in after it failed, with the job already ended.
+
+If Moonraker cannot be read, the reason is kept: `moonraker_timeout`, `moonraker_unreachable`, `moonraker_http_error` (for example Klippy shut down) or `moonraker_malformed`. An unreachable Moonraker is never read as an idle printer.
+
+The JSON (`schema: 2`) has:
+- `checks`, with `pass`, `fail` or `unknown` for each check;
+- `blockers`, a list of `{check, code, detail}`;
+- `ports`, keyed by the path you gave, with the resolved `device`, `owners` and whether the scan was `complete`.
+
+The exit code is 0 only when `safe_for_flash` is true, and 3 otherwise.
+
+**Port names:** pass ports by persistent name (`/dev/serial/by-id/...`, or `/dev/serial/by-path/...`). The check follows the link to today's device instead of assuming that `ttyUSB0/1/2` keep their numbers.
+
+**Klipper running:** the preflight blocks with `port_busy`, because Klippy owns the gadget ports. That is the expected answer.
+
 ## Stock power/reset action is not a read-only primitive
 
 Both compared stock OTA servers stop Klipper and invoke `/usr/bin/mcu_reset.sh` before the CFS-specific `mcu_update` pass. That script drives GPIO 140 / PE12 (`MCU_PWR_EN`) high for two seconds (power off) and then low (power on). It is a physical power-cycle, not an identity/status query.
