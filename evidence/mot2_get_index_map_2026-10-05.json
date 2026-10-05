@@ -1,0 +1,283 @@
+{
+ "schema": 1,
+ "date": "2026-10-05",
+ "scope": "MOT2 motor controller GET (function 0x08) index map, static analysis only",
+ "method": "Ghidra decompilation with the project's RISCV:LE:32:QingKe profile (44 LLVM XW vectors validated); no firmware executed, emulated or sent to a controller",
+ "images": [
+  {
+   "profile": "F012/mot0_022_C30-mot2_002_071.bin (mot*_022, identical)",
+   "sha256": "412947fad42837269f78a2e1a260bbaaead2aba632ce56ebd91722f3fccf6d75",
+   "get_handler": "0x0000f200",
+   "command_registration": "0x000060c4",
+   "system_object": "0x20001df0 (constructor 0x0000af92)"
+  },
+  {
+   "profile": "F012/motor/mot0_021_C30-mot2_002_071.bin (motor/*, identical)",
+   "sha256": "a797c95e0eb5bcdee30010115f5ab481f592c7d69ebebc9584a7344a2be8ecd0",
+   "get_handler": "0x0000f1c4",
+   "command_registration": "0x00006076"
+  },
+  {
+   "profile": "F012/mot0_022_C30-mot2_002_081.bin",
+   "sha256": "67b364a627c1609727a8add8237ed8e602326997af1866b34f88c7412198b3f7",
+   "get_handler": "0x000102d0",
+   "command_registration": "0x000060fc"
+  },
+  {
+   "profile": "F012/motor/mot0_021_C30-mot2_002_081.bin",
+   "sha256": "92ff31301827406519ccad899125aa7895eeaefef240713b5543011bb7675826",
+   "get_handler": "0x000102a4",
+   "command_registration": "0x000060b0"
+  }
+ ],
+ "handler": {
+  "request_payload": "1 byte: index",
+  "response_payload": "4 bytes little-endian, the raw bits of the field (float32 or integer)",
+  "cases": "0..18; no default case: an index >= 19 returns the previous answer unchanged",
+  "same_in_all_images": "indices 0-10 and 15-18 read identical object offsets; 11-14 read system-object fields that moved in 081 (0x6b4/0x69a/0x69e/0x38 -> 0x7bc/0x7a2/0x7a6/0x40)"
+ },
+ "objects_071_022": {
+  "system": "0x20001df0: [0] motor 0x20001dac, [1] controller 0x20000000, [2] driver board 0x20000968, [3] encoder 0x20000af8, [4] 0x20001c2c",
+  "controller_pid_blocks": {
+   "position": "0xf4",
+   "speed": "0x1c0",
+   "current_1": "0x28c",
+   "current_2": "0x358",
+   "stride": "0xcc"
+  },
+  "pid_block_layout": {
+   "kp_param": "+0x08",
+   "ki_param": "+0x0c",
+   "kd_param": "+0x10",
+   "kc_param": "+0x14",
+   "ref": "+0x24",
+   "fdb": "+0x28",
+   "output": "+0x2c",
+   "err": "+0x30"
+  },
+  "pid_function": "0x00009920 (071) / 0x00009a0e (081)",
+  "registry_crosscheck": "spd.kp +0x1c8, spd.ki +0x1cc, spd.kc +0x1d4, cur.kp +0x294, cur.kc +0x2a0, pos.kp +0xfc match base+0x08/+0x0c/+0x14",
+  "driver_board_methods": {
+   "phase_a": "0x00005ede (ADC ch0)",
+   "phase_b": "0x00005f1a (ADC ch1)",
+   "scaling": "0x00005eba: Vref*(1/4096)*counts/(amp_gain*R_shunt)",
+   "supply_voltage": "0x00005f7e -> +0x48",
+   "mcu_temperature": "0x00005fb0 -> +0x4c, calibration word 0x1ffff720"
+  },
+  "encoder_methods": {
+   "read": "0x00005be4 returns +0x2c",
+   "single_turn": "0x00005c18 -> +0x24",
+   "multi_turn": "0x00005b94 -> +0x2c"
+  },
+  "stall_detector": "0x0000b50c: |controller+0x37c| > stall_cur_A or |controller+0x124| > stall_pos_err_rad -> system+0x38 = 1",
+  "acquisition_tick": "0x0000b6d2: controller+0x7c = phase_a(), controller+0x80 = phase_b() * (+1.0 | -1.0)"
+ },
+ "matrix": [
+  {
+   "index": 0,
+   "name": "zero",
+   "type": "zero",
+   "unit": null,
+   "unit_status": "n/a",
+   "status": "verified-static",
+   "source": "constant 0 in the handler",
+   "note": ""
+  },
+  {
+   "index": 1,
+   "name": "pos_ref",
+   "type": "float32",
+   "unit": "rad",
+   "unit_status": "candidate",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x118: position PID reference",
+   "note": "position PID error is compared with stall_pos_err_rad"
+  },
+  {
+   "index": 2,
+   "name": "spd_ref",
+   "type": "float32",
+   "unit": "rad/s",
+   "unit_status": "candidate",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x1e4: speed PID reference",
+   "note": ""
+  },
+  {
+   "index": 3,
+   "name": "id_ref",
+   "type": "float32",
+   "unit": "A",
+   "unit_status": "candidate",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x2b0: first current PID reference",
+   "note": "d axis by elimination: the other current loop is the one checked against stall_cur_A"
+  },
+  {
+   "index": 4,
+   "name": "iq_ref",
+   "type": "float32",
+   "unit": "A",
+   "unit_status": "proven",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x37c: second current PID reference",
+   "note": "compared directly with stall_cur_A by the stall detector"
+  },
+  {
+   "index": 5,
+   "name": "pos_fdb",
+   "type": "float32",
+   "unit": "rad",
+   "unit_status": "candidate",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x11c: position PID feedback",
+   "note": ""
+  },
+  {
+   "index": 6,
+   "name": "spd_fdb",
+   "type": "float32",
+   "unit": "rad/s",
+   "unit_status": "candidate",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x1e8: speed PID feedback",
+   "note": ""
+  },
+  {
+   "index": 7,
+   "name": "id_fdb",
+   "type": "float32",
+   "unit": "A",
+   "unit_status": "candidate",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x2b4: first current PID feedback",
+   "note": ""
+  },
+  {
+   "index": 8,
+   "name": "iq_fdb",
+   "type": "float32",
+   "unit": "A",
+   "unit_status": "proven",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x380: second current PID feedback",
+   "note": ""
+  },
+  {
+   "index": 9,
+   "name": "phase_current_a",
+   "type": "float32",
+   "unit": "A",
+   "unit_status": "proven",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x7c: ADC channel 0 minus offset, x Vref/4096 / (amp_gain x R_shunt)",
+   "note": ""
+  },
+  {
+   "index": 10,
+   "name": "phase_current_b",
+   "type": "float32",
+   "unit": "A",
+   "unit_status": "proven",
+   "status": "verified-static",
+   "source": "controller object (system +4) +0x80: ADC channel 1, same scaling, sign +/-1 from a system flag",
+   "note": ""
+  },
+  {
+   "index": 11,
+   "name": "step_input_11",
+   "type": "int32",
+   "unit": null,
+   "unit_status": "n/a",
+   "status": "out-of-scope",
+   "source": "system object step-pulse input object field",
+   "note": "subdivision domain: excluded"
+  },
+  {
+   "index": 12,
+   "name": "step_input_12",
+   "type": "uint16",
+   "unit": null,
+   "unit_status": "n/a",
+   "status": "out-of-scope",
+   "source": "system object step-pulse input object field",
+   "note": "subdivision domain: excluded"
+  },
+  {
+   "index": 13,
+   "name": "step_input_13",
+   "type": "uint16",
+   "unit": null,
+   "unit_status": "n/a",
+   "status": "out-of-scope",
+   "source": "system object step-pulse input object field",
+   "note": "subdivision domain: excluded"
+  },
+  {
+   "index": 14,
+   "name": "stall_detected",
+   "type": "uint16",
+   "unit": null,
+   "unit_status": "n/a",
+   "status": "verified-static",
+   "source": "system object +0x38 (071) / +0x40 (081): set to 1 by the stall detector, 0 when cleared",
+   "note": ""
+  },
+  {
+   "index": 15,
+   "name": "encoder_single_turn",
+   "type": "int32",
+   "unit": "counts",
+   "unit_status": "proven",
+   "status": "verified-static",
+   "source": "encoder object (system +0xc) +0x24: position within one turn",
+   "note": "counts per turn are the encoder resolution field, not decoded here"
+  },
+  {
+   "index": 16,
+   "name": "encoder_multi_turn",
+   "type": "int32",
+   "unit": "counts",
+   "unit_status": "proven",
+   "status": "verified-static",
+   "source": "encoder object (system +0xc) +0x2c: turns x resolution + single-turn count",
+   "note": ""
+  },
+  {
+   "index": 17,
+   "name": "mcu_temperature",
+   "type": "float32",
+   "unit": "degC",
+   "unit_status": "proven",
+   "status": "verified",
+   "source": "driver board object (system +8) +0x4c: internal sensor with the factory calibration word at 0x1ffff720",
+   "note": "polled by Kalico (motor_control GET_MCU_TEMP_INDEX)"
+  },
+  {
+   "index": 18,
+   "name": "supply_voltage",
+   "type": "float32",
+   "unit": "V",
+   "unit_status": "proven",
+   "status": "verified-static",
+   "source": "driver board object (system +8) +0x48: ADC x Vref x divider / 4096",
+   "note": ""
+  },
+  {
+   "index": 19,
+   "name": "unsupported_19",
+   "type": "none",
+   "unit": null,
+   "unit_status": "n/a",
+   "status": "unsupported",
+   "source": "no handler case: the previous answer is returned unchanged",
+   "note": ""
+  }
+ ],
+ "tracking_error": "not a GET index. The firmware keeps the position PID error at controller+0x124 (used by the stall detector) but the handler does not expose it. ref - fdb from indices 1 and 5 is a host-side approximation from two separate transactions.",
+ "safety": {
+  "serial_io_performed": false,
+  "index_scan_performed": false,
+  "flash_allowed": false
+ }
+}
