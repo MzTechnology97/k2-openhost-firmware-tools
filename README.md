@@ -73,6 +73,7 @@ python -m k2fw probe-mcus
 python -m k2fw probe-motors
 python -m k2fw status
 python -m k2fw status --manifest firmware.json
+python -m k2fw identity --loader-evidence evidence/k2_pro_live_loader_probe_2026-10-04.json --manifest firmware.json
 python -m k2fw inspect-update /path/to/cfs0_050_G30-cfs0_000_150.bin
 python -m k2fw inspect-cfs-loader-probe
 python -m k2fw inspect-motor-loader-probe
@@ -88,6 +89,13 @@ Read-only motor probing also confirms identical X/Y/E `boot_key=17030 (0x4286)`,
 For Main and Nozzle, `status` keeps the live Kalico identity separate from the stock F012 package target. The analysed F012 trees contain exactly one direct-MCU artifact for each role: `mcu0_120_G32-mcu0_001_000.bin` for Main and `noz0_130_G30-noz0_021_000.bin` for Nozzle. These package targets are reported with `runtime_verified=false`; they are not presented as bootloader identities read from the device. Creality's exact 25-byte identity query belongs to the `mcu_util` loader state machine, which K2-OpenHost does not enter for status collection.
 
 With `--manifest`, application-only motor/CFS status remains `hardware-unresolved`. When a separately validated `loader_identity` is available, the comparator now prefers that exact live hardware token and can resolve an exact target plus `update_required`, while still keeping `flash_allowed=false`. On the development K2 Pro this resolves X/Y to `mot2_023_C30`, E to `mot2_022_C30`, and CFS to `cfs0_050_G32`. See `docs/MANIFEST_COMPARISON.md`.
+
+`identity` builds the versioned firmware identity contract (`k2fw.identity/1`) for every role from the same reads. It keeps three kinds of data apart:
+- the runtime observation;
+- a loader identity, taken only from authorized, dated evidence and cross-checked against the runtime fingerprint;
+- the package target.
+
+`update_required` appears only with a verified loader identity and an exact target; `flash_allowed` is always false. See `docs/FIRMWARE_IDENTITY_CONTRACT.md`.
 
 The guarded multi-device loader probe has now validated the common GPIO140 loader-entry path for Main, Nozzle, E, X/Y and CFS without erase or firmware transfer. The exact live identities and restore observations are documented in `docs/LIVE_LOADER_IDENTITY.md`.
 
