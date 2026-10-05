@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "date": "2026-10-05",
+  "subject": "generic CFS RFID read-only diagnostic patch model",
+  "stock": {
+    "application": "cfs0_000_113",
+    "g30_g32_byte_identical": true,
+    "size": 151724,
+    "sha256": "386a1106391a332e6a97803c5ce00b87b6d3ddc4c3d61f6fe07fb19fd3125b76"
+  },
+  "recovered_capabilities": {
+    "iso14443a_request": "0x52",
+    "anticollision": "0x93 0x20",
+    "select": "0x93 0x70",
+    "key_a_authentication": "0x60",
+    "raw_read": "0x30 / 16 bytes",
+    "stock_write_primitive_present_but_not_referenced": "0xA0"
+  },
+  "patch": {
+    "command": "0x57",
+    "hook_runtime_address": "0x0801a2e4",
+    "handler_runtime_address": "0x080350ac",
+    "handler_size": 314,
+    "patched_size": 152038,
+    "patched_sha256": "2626ce9bddcfda3891123ea54d70b6d87246f2b0c17ff481eaf63c35036741d1",
+    "operations": [
+      "detect",
+      "read-auth",
+      "read-noauth"
+    ]
+  },
+  "validation": {
+    "static_validation_ok": true,
+    "changed_original_offsets": [
+      "0xa2e4",
+      "0xa2e5",
+      "0xa2e6",
+      "0xa2e7"
+    ],
+    "forbidden_write_reference": false,
+    "reproducible_build": true,
+    "protocol_tests": 6
+  },
+  "safety": {
+    "tag_write_supported": false,
+    "tag_emulation_supported": false,
+    "proprietary_key_embedded": false,
+    "firmware_binary_committed": false,
+    "hardware_flash_performed": false,
+    "live_command_test_performed": false
+  }
+}
