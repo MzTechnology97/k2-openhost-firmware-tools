@@ -10,7 +10,6 @@ from k2fw.cfs_loader import (
     MODE_APP,
     MODE_LOADER,
     guard_cfs_loader_probe_frame,
-    probe_cfs_loader_live,
     run_cfs_loader_probe_session,
 )
 from k2fw.rs485 import FRAME_HEAD, crc8
