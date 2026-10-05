@@ -230,7 +230,7 @@ def test_no_live_status_is_unknown_not_absent():
     assert d["main"]["verification"] == "package-provenance"
 
 
-def test_cli_identity_from_saved_status(tmp_path, capsys):
+def test_cli_identity_from_saved_status(tmp_path):
     status = live_status()
     status["observed_at"] = None
     (tmp_path / "status.json").write_text(json.dumps(status))
