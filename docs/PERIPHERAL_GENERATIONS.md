@@ -1,6 +1,6 @@
 # K2 Pro peripheral firmware generations
 
-This page records byte-level differences between the user-supplied K2 Pro stock bundles `1.1.0.94` and `1.1.6.7.2`. It does not infer compatibility from filenames alone.
+This page records byte-level differences between the K2 Pro stock bundles `1.1.0.94` and `1.1.6.7.2`. It does not infer compatibility from filenames alone.
 
 ## F012 devices
 

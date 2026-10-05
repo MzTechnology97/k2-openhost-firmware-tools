@@ -60,7 +60,7 @@ The guarded loader probe independently identifies the development unit as `cfs0_
 
 ## Validation against K2 Pro 1.1.6.7.2
 
-A reduced manifest was generated directly from the user-supplied extracted `1.1.6.7.2` firmware tree and contains 12 relevant F012/CFS artifacts.
+A reduced manifest was generated directly from a locally extracted `1.1.6.7.2` firmware tree and contains 12 relevant F012/CFS artifacts.
 
 Application-only comparison on 2026-10-03 remained unresolved for motors/CFS as designed.
 

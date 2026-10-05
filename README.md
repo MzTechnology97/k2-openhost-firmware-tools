@@ -12,7 +12,7 @@ The project is intentionally split into two phases:
 1. **read-only discovery and validation** — inventory firmware bundles, identify target hardware, compare versions and hashes, and probe the live printer without changing it;
 2. **controlled flashing** — only after the stock Creality update protocol and recovery behaviour have been reproduced and validated on hardware.
 
-No Creality firmware binaries are stored in this repository. The tools operate on firmware files supplied locally by the printer owner.
+No Creality firmware binaries are stored in this repository. The tools work on firmware files that you provide locally.
 
 ## Why this repository exists
 
@@ -130,4 +130,4 @@ See `docs/LIVE_READ_ONLY_STATUS.md` for the validated live probes, `docs/MANIFES
 
 ## Project relationship
 
-This repository is part of the K2-OpenHost project and is separate from the Kalico and Mainsail forks and the Cartographer plugin. Original Creality firmware remains Creality software; this repository stores only independently written tooling, documentation, hashes and metadata derived from user-supplied images.
+This repository is part of the K2-OpenHost project and is separate from the Kalico and Mainsail forks and the Cartographer plugin. Original Creality firmware remains Creality software; this repository stores only independently written tooling, documentation, hashes and metadata derived from firmware images that users provide locally.
