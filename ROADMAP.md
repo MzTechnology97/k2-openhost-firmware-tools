@@ -26,6 +26,11 @@ Completed/validated:
 - CFS 1.1.3 runtime boot/hardware investigation completed: G30/G32 is absent from the byte-identical application images, and both bounded runtime `F0/00` probes returned `INVALID_PARAM`; stock `mcu_util_485` reaches its exact identity read after A1/A0 address management, so runtime status reports the boot variant as `unknown` rather than mutating address state;
 - unified `k2fw status` for Main + Nozzle + X/Y/E + CFS;
 - optional `k2fw status --manifest` comparison against an explicitly selected manifest; application-only motor/CFS records remain unresolved, while separately validated live loader identities can now resolve exact artifacts without enabling writes;
+- unified identity contract `k2fw.identity/1` (`k2fw identity`):
+  - runtime observation, authorized loader evidence and package target are kept apart, each with source, verification level and freshness;
+  - `update_required` only with a verified loader identity and an exact target; `flash_allowed` always false;
+  - validated live on the development K2 Pro with the 2026-10-04 evidence;
+  - the Kalico cache and Mainsail display are documented for their own PRs;
 - MOT2 GET index map recovered statically (071/081, both profiles), with `k2fw.mot2_get` parsers for the proven formats:
   - indices 1–10, 14–16 and 18 are field-verified, with units partly candidate;
   - 17 is verified live;
