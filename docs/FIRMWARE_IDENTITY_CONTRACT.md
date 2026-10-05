@@ -152,9 +152,9 @@ Live result on that day, with the evidence and the 1.1.6.7.2 manifest (`flash_al
 
 Without the evidence file, the motors and the CFS drop to `runtime-fingerprint` with ambiguous targets, and `update_required: null`.
 
-## Integration in Kalico (for the agent doing that PR)
+## Integration in Kalico
 
-Not implemented here; the PR belongs in `kalico-k2pro`.
+Not implemented here: this part belongs in `kalico-k2pro`.
 
 - **Read once per session, never on subscribe.** Read motor FLASH_PARAM id 0 once per Klipper session, after the startup override pass while `motor_ready`, and keep it in `MotorParamCache` next to overrides and calibration. Store the value, the read time and the session.
 - **Expose it read-only.** `get_status` returns the cached value with its age. A G-code like `MOTOR_IDENTITY_REFRESH` repeats the read on request only: idle, not homing, not printing, the same guards as `k2fw status`.

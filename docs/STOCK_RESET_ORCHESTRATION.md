@@ -7,7 +7,7 @@ Compared host releases:
 - K2 Pro `1.1.0.94`
 - K2 Pro `1.1.6.7.2`
 
-All findings below come from static analysis of user-supplied firmware. No reset, power-cycle, loader entry, erase or flash was performed on the development printer.
+All findings below come from static analysis of the stock firmware images. No reset, power-cycle, loader entry, erase or flash was performed on the development printer.
 
 ## 1. `mcu_reset.sh` is a power-cycle
 
