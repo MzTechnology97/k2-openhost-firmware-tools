@@ -31,6 +31,13 @@ Completed/validated:
   - `update_required` only with a verified loader identity and an exact target; `flash_allowed` always false;
   - validated live on the development K2 Pro with the 2026-10-04 evidence;
   - the Kalico cache and Mainsail display are documented for their own PRs;
+- MOT2 GET index map recovered statically (071/081, both profiles), with `k2fw.mot2_get` parsers for the proven formats:
+  - indices 1–10, 14–16 and 18 are field-verified, with units partly candidate;
+  - 17 is verified live;
+  - 11–13 are subdivision domain (out of scope);
+  - ≥19 return stale data;
+  - tracking error is not exposed;
+  - the supervised hardware check is still required before any telemetry;
 - real `1.1.6.7.2` validation: Main/Nozzle package targets resolved, seven F012 motor candidates and two cfs0 CFS candidates remained unresolved, and every update decision stayed `null` / `flash_allowed=false`.
 
 Still required:

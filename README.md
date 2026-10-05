@@ -97,6 +97,13 @@ With `--manifest`, application-only motor/CFS status remains `hardware-unresolve
 
 `update_required` appears only with a verified loader identity and an exact target; `flash_allowed` is always false. See `docs/FIRMWARE_IDENTITY_CONTRACT.md`.
 
+Motor GET (function 0x08) readings were mapped statically in all four analysed motor images (`docs/MOT2_GET_READINGS.md`):
+- indices 0–18, with no default case;
+- reference/feedback of the position, speed and two current loops;
+- phase currents, stall flag, encoder counts (int32, not float), MCU temperature and supply voltage.
+
+`k2fw.mot2_get` decodes only the proven formats. Only the temperature has been observed live; a supervised hardware check is proposed, not run.
+
 The guarded multi-device loader probe has now validated the common GPIO140 loader-entry path for Main, Nozzle, E, X/Y and CFS without erase or firmware transfer. The exact live identities and restore observations are documented in `docs/LIVE_LOADER_IDENTITY.md`.
 
 Phase 3 now also includes an offline CFS RS-485 update inspector. Forced decompilation of the stock `F0` receive handler corrected the exact sequence: `00` get-version, `03` get-sector-size, `06` private-flash erase, `01` update-request, raw 32-bit application length, firmware data, then `02` start-app after the final data reply reaches `DONE`. Chunk size is derived from the one-byte sector token returned by the target; the inspector does not invent a schedule when that runtime token is unknown. It can render the fixed control-frame bytes offline for review, but has no serial writer and always keeps `send_enabled=false`. See `docs/RS485_UPDATE_PROTOCOL.md`. Static CFS image-layout and recovery-boundary analysis is documented in `docs/CFS_RECOVERY_ANALYSIS.md`. The explicit loader-mode protocol and guarded non-flash live probe are documented in `docs/CFS_LOADER_PROBE.md`. Cross-device motor/CFS/Main/Toolhead architecture is documented in `docs/FIRMWARE_DEVICE_ARCHITECTURE.md`.
