@@ -53,54 +53,6 @@ VERIFICATION_LEVELS = (
 DEFAULT_MAX_OBSERVATION_AGE_S = 600.0
 DEFAULT_MAX_EVIDENCE_AGE_DAYS = 30.0
 
-SOURCE_MATRIX = [
-    {
-        "source": "Moonraker mcu / mcu nozzle_mcu (mcu_version)",
-        "category": "observed",
-        "roles": ["main", "nozzle"],
-        "reliability": "running Kalico application string; says nothing about "
-        "the Creality loader or the stock application token",
-    },
-    {
-        "source": "motor FLASH_PARAM id 0 (MOTOR_READ_PARAM)",
-        "category": "observed",
-        "roles": ["motor_x", "motor_y", "motor_e"],
-        "reliability": "exact fingerprint of known applications "
-        "(0x0247 mot2_002_071, 0x024b mot2_002_081); not the hardware target",
-    },
-    {
-        "source": "box cfs_versions VERSION_SN",
-        "category": "observed",
-        "roles": ["cfs_*"],
-        "reliability": "application only (1.1.3, 1.5.0); G30/G32 images are "
-        "byte-identical, so never the boot/hardware variant",
-    },
-    {
-        "source": "loader-probe evidence (e.g. "
-        "evidence/k2_pro_live_loader_probe_2026-10-04.json)",
-        "category": "loader",
-        "roles": ["main", "nozzle", "motor_x", "motor_y", "motor_e", "cfs_*"],
-        "reliability": "hardware + application from the loader handshake on "
-        "this printer, on the evidence date; checked against the runtime "
-        "fingerprint where one exists",
-    },
-    {
-        "source": "stock F012 table (live.STOCK_F012_DIRECT_MCU_TARGETS)",
-        "category": "package",
-        "roles": ["main", "nozzle"],
-        "reliability": "the unique stock artifact for the role; "
-        "runtime_verified=false",
-    },
-    {
-        "source": "explicit manifest (k2fw scan/compare output)",
-        "category": "package",
-        "roles": ["all"],
-        "reliability": "exact only with a known hardware token and a single "
-        "match; motor/CFS without loader identity stay ambiguous",
-    },
-]
-
-
 # --- helpers -----------------------------------------------------------------
 
 
