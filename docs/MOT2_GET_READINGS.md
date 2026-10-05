@@ -5,7 +5,7 @@ Research for [#10](https://github.com/MzTechnology97/k2-openhost-firmware-tools/
 - no GET was sent to a controller;
 - no index was scanned on the bus.
 
-Microstep/subdivision is out of scope by the project owner's decision; the indices that belong to it are marked and not analysed.
+Microstep/subdivision is out of scope for this research: the indices that belong to it are marked and not analysed.
 
 Machine-readable evidence: [`evidence/mot2_get_index_map_2026-10-05.json`](../evidence/mot2_get_index_map_2026-10-05.json). Parser: `k2fw.mot2_get`.
 
@@ -99,15 +99,15 @@ Across the images, indices 0–10 and 15–18 read identical offsets. Indices 11
 
 Index 1 minus index 5 is only a host-side approximation: the two readings come from separate transactions taken at different instants.
 
-## What is not claimed
+## Limits
 
 - No value except index 17 has been seen on a real controller.
 - The calibration constants Vref and the voltage divider were not read, so the absolute scale of indices 9, 10 and 18 still needs the hardware check.
 - The encoder resolution (counts per turn) was not decoded.
 - Indices 11–13 were not analysed (subdivision domain).
-- Nothing here changes Kalico. A Kalico hook is a separate PR, only after the hardware check, and off by default.
+- Nothing here changes Kalico. A Kalico hook will come later, only after the hardware check, and off by default.
 
-## Proposed supervised hardware check (not authorized by #10)
+## Proposed supervised hardware check (not run yet)
 
 **Conditions:**
 - printer idle (`standby`), heaters off, not homing;
@@ -126,7 +126,7 @@ Index 1 minus index 5 is only a host-side approximation: the two readings come f
 | 17 | equal to Kalico's reading |
 | 18 | close to the board supply (compare with SYS_PARAM 26 `driver_board_power_supply_V`) |
 | 9/10, 7/8 | near 0 A while holding |
-| 15/16 | stable at rest; 16 changes by the expected counts after a small manual X move (`FORCE_MOVE` 1 mm, owner present) |
+| 15/16 | stable at rest; 16 changes by the expected counts after a small manual X move (`FORCE_MOVE` 1 mm, with someone at the printer) |
 | 5 vs 1 | follow each other |
 | 14 | 0 |
 

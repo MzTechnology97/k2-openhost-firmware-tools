@@ -1,6 +1,6 @@
 # Recovered Creality peripheral update path
 
-This document records the stock K2 Pro update behaviour recovered from user-supplied Creality firmware images. The binaries were inspected statically; they were not executed during this analysis.
+This document records the stock K2 Pro update behaviour recovered from Creality's stock firmware images. The binaries were inspected statically; they were not executed during this analysis.
 
 Compared stock images:
 
