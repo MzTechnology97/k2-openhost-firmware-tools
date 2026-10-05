@@ -3,10 +3,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 from .cfs_loader import inspect_cfs_loader_probe, probe_cfs_loader_live
 from .device_matrix import inspect_device_matrix
+from .identity import build_identity_contract
 from .live import query_klipper_mcus, query_motor_runtime_versions, query_printer_status
 from .manifest import compare_manifests, dump_json, load_manifest, scan_tree
 from .mcu_update import inspect_mcu_update
@@ -155,6 +157,33 @@ def cmd_status(args: argparse.Namespace) -> int:
         result = compare_live_status_to_manifest(
             result, load_manifest(args.manifest)
         )
+    _write_or_print(result, args.output)
+    return 0
+
+
+def cmd_identity(args: argparse.Namespace) -> int:
+    now = time.time()
+    if args.from_status:
+        live = json.loads(Path(args.from_status).read_text(encoding="utf-8"))
+        observed_at = live.get("observed_at")  # undated files count as stale
+    else:
+        live = query_printer_status(args.moonraker, timeout=args.timeout)
+        observed_at = now
+    evidence = None
+    if args.loader_evidence:
+        evidence = json.loads(Path(args.loader_evidence).read_text(encoding="utf-8"))
+    result = build_identity_contract(
+        live,
+        now=now,
+        observed_at=observed_at,
+        loader_evidence=evidence,
+        loader_evidence_source=(
+            Path(args.loader_evidence).name if args.loader_evidence else None
+        ),
+        manifest=load_manifest(args.manifest) if args.manifest else None,
+        max_observation_age_s=args.max_age,
+        max_evidence_age_days=args.max_evidence_days,
+    )
     _write_or_print(result, args.output)
     return 0
 
@@ -388,6 +417,40 @@ def build_parser() -> argparse.ArgumentParser:
     )
     status.add_argument("-o", "--output", help="write JSON result to this path")
     status.set_defaults(func=cmd_status)
+
+    identity = sub.add_parser(
+        "identity",
+        help=(
+            "unified firmware identity contract (k2fw.identity/1): runtime "
+            "observation, verified loader identity and package target kept apart"
+        ),
+    )
+    identity.add_argument(
+        "--moonraker", default="http://127.0.0.1:7125", help="Moonraker base URL"
+    )
+    identity.add_argument("--timeout", type=float, default=3.0)
+    identity.add_argument(
+        "--from-status",
+        help="build from a saved `k2fw status` JSON instead of querying Moonraker",
+    )
+    identity.add_argument(
+        "--loader-evidence",
+        help="authorized loader-probe evidence JSON (hardware-validated, no writes)",
+    )
+    identity.add_argument("--manifest", help="explicit firmware manifest")
+    identity.add_argument(
+        "--max-age", type=float, default=600.0,
+        help="seconds after which a runtime observation is stale (default 600)",
+    )
+    identity.add_argument(
+        "--max-evidence-days", type=float, default=30.0,
+        help=(
+            "days after which loader evidence without a runtime cross-check is "
+            "not used (default 30)"
+        ),
+    )
+    identity.add_argument("-o", "--output", help="write JSON result to this path")
+    identity.set_defaults(func=cmd_identity)
 
     return parser
 
