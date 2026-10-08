@@ -65,6 +65,8 @@ The application mapping is scoped to the firmware artifacts analysed by this pro
 
 ## CFS runtime identity and boot/hardware limit
 
+The live firmware-status command intentionally reports identity/version data only. Environment telemetry belongs to the running Kalico Box adapter: on the validated CFS 1.1.3 path, the four-byte command `0x0A` state carries temperature and relative humidity, while command `0x15` is retained as raw hardware-status/self-test diagnostics. `k2fw status` does not duplicate or reinterpret those fields.
+
 `k2fw status` now consumes the CFS state already exposed by the running Kalico `box` object. It copies only the application firmware version and deliberately drops the CFS serial number, raw payload and full VERSION_SN text.
 
 Validated development-printer result:
