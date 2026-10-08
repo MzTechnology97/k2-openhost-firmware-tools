@@ -25,6 +25,7 @@ Completed/validated:
 - CFS application identity added to `k2fw status` without exposing its serial/UniID;
 - CFS 1.1.3 runtime boot/hardware investigation completed: G30/G32 is absent from the byte-identical application images, and both bounded runtime `F0/00` probes returned `INVALID_PARAM`; stock `mcu_util_485` reaches its exact identity read after A1/A0 address management, so runtime status reports the boot variant as `unknown` rather than mutating address state;
 - unified `k2fw status` for Main + Nozzle + X/Y/E + CFS;
+- CFS 1.1.3 protocol semantics correlated with the runtime OpenHost adapter: four-byte `0x0A` state contains temperature/humidity/event/state, while `0x15` remains raw hardware diagnostics rather than environment telemetry.
 - optional `k2fw status --manifest` comparison against an explicitly selected manifest; application-only motor/CFS records remain unresolved, while separately validated live loader identities can now resolve exact artifacts without enabling writes;
 - unified identity contract `k2fw.identity/1` (`k2fw identity`):
   - runtime observation, authorized loader evidence and package target are kept apart, each with source, verification level and freshness;
