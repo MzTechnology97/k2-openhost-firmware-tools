@@ -48,6 +48,8 @@ The F012 closed-loop motor firmware also changes from application `mot2_002_071`
 
 This makes firmware-generation differences a credible explanation for protocol differences observed between older K2 Pro hardware and integrations developed against newer CFS firmware. It does **not** by itself prove which individual protocol fields changed; that still requires wire-level or binary comparison.
 
+For the validated K2 Pro CFS application 1.1.3, later OpenHost analysis/live testing established that the four-byte command-`0x0A` state carries signed temperature, relative humidity, event byte and Box state. The separate command `0x15` response is treated as an opaque hardware-status/self-test vector. Newer CFS application generations must be validated independently before reusing the 1.1.3 field layout.
+
 ## Current scope
 
 The current implementation provides safe firmware-tree scanning, manifest comparison, exact target resolution, a multi-device firmware architecture model, CFS probing and a live read-only status path for Main MCU, Toolhead/Nozzle MCU, X/Y/E closed-loop motor controllers and the CFS application. It does **not** contain a flash command.

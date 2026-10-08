@@ -37,8 +37,11 @@ The newer wrapper adds a large dry-box control surface that is absent from the o
 
 This is strong evidence that Creality evolved both the CFS application firmware and the host-side Box implementation. It supports treating protocol shape as firmware-generation-dependent rather than assuming the current Jacob/K2 Plus decoder applies unchanged to an older K2 Pro CFS.
 
-## What is not yet proven
+## Environment/status semantics clarified
 
-The evidence above does not yet identify which bytes in the K2 Pro `HARDWARE_STATUS` response represent temperature and relative humidity. The old CFS responds to the read-only hardware-status opcode, but field decoding remains pending. We will not guess those offsets.
+Subsequent K2-OpenHost firmware analysis and live validation separated two protocol concepts that were previously conflated:
 
-The next protocol step is to recover or capture the stock `communication_get_hardware_status` field mapping for both CFS generations and then add a version-aware decoder to K2-OpenHost.
+- on the development K2 Pro running CFS application **1.1.3**, command `0x0A` returns the four-byte steady state used by the Kalico adapter: signed temperature °C, relative humidity %, event byte and Box state;
+- command `0x15` is a separate 16-byte hardware-status/self-test vector. K2-OpenHost keeps that payload as raw diagnostics and does **not** guess temperature/humidity offsets inside it.
+
+This means temperature/humidity are no longer pending for the validated 1.1.3 K2 Pro path; they come from `0x0A`, not from `HARDWARE_STATUS (0x15)`. The exact environment/state layout for newer CFS generations such as application 1.5.0 must still be validated independently before assuming the 1.1.3 layout applies unchanged.
