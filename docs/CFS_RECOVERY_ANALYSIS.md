@@ -2,18 +2,20 @@
 
 This note records the static evidence available for the CFS application/loader boundary. It does not claim that interrupted writes are recoverable until that behavior is validated on recoverable hardware.
 
-## Application link address
+## Application link address versus physical update placement
 
-Both analysed `cfs0` generations are raw Cortex-M application images whose reset vectors point into a region beginning at `0x08010000`.
+The original analysis inferred a **nominal linked image window** at `0x08010000` from the stock Cortex-M reset vectors. **Do not use this inference as the physical load/write address.** Later analysis of the G32 loader and the merged [T113 bootstrap #13](https://github.com/MzTechnology97/k2-openhost-t113-bootstrap/pull/13) established a physical application placement beginning at **`0x08003000`**; the updater's current custom-image validator and tests use that origin.
 
-| host release | app | size | reset vector | inferred app base | end (exclusive) |
+| Host release | Application | Image bytes | Reset vector in image | Physical APP start | Physical end (exclusive) |
 | --- | --- | ---: | --- | --- | --- |
-| 1.1.0.94 | cfs0_000_113 | 151724 | `0x08015801` | `0x08010000` | `0x080350ac` |
-| 1.1.6.7.2 | cfs0_000_150 | 175104 | `0x0801a759` | `0x08010000` | `0x0803ac00` |
+| 1.1.0.94 | `cfs0_000_113` | 151724 | `0x08015801` | `0x08003000` | `0x080280ac` |
+| 1.1.6.7.2 | `cfs0_000_150` | 175104 | `0x0801a759` | `0x08003000` | `0x0802dc00` |
 
-For both images the reset handler resolves to a valid offset inside the supplied binary. This leaves `0x10000` bytes (64 KiB) below the linked application region, from the normal MCU flash origin `0x08000000` to `0x0800ffff`.
+Reset-vector addresses are **absolute execution addresses** and do not alone identify the physical first flash byte of the file. In particular, the previous end values `0x080350ac` and `0x0803ac00` were calculated using the nominal `0x08010000` origin, not the later-verified physical placement.
 
-That lower region is **consistent with** a resident loader/bootloader or other immutable lower-flash code. The stock firmware bundle does not contain a separate `cfs0` bootloader image, so this analysis does not independently prove the contents of that lower region.
+This also corrects the earlier claim that the CFS must reserve **64 KiB** below the application. The loader/application boundary identified in subsequent work is **`0x3000` (12 KiB) from `0x08000000`** for this loader generation; neither dimension establishes the full contents of the protected loader region without a complete dump. The original stock bundle does not contain a separate `cfs0` bootloader image.
+
+Historical patched-stock builders may still encode the nominal `0x08010000` coordinate system in callsite tables or linker offsets. **Do not globally change their origin without a complete relocation and validation of every hook.**
 
 ## Host update addressing
 
@@ -60,8 +62,8 @@ Live restore also showed that `F0/02` can ACK while A2 still reports loader mode
 
 Static evidence now supports all of the following:
 
-- `cfs0` application code is linked at `0x08010000`;
-- there is a separate 64 KiB lower-flash region below the application;
+- historical stock-image reset vectors are consistent with a nominal `0x08010000` execution window, while the later-verified physical APP placement is `0x08003000`;
+- the loader/application boundary for the researched G32 generation is at `0x08003000` (12 KiB above normal flash origin); the precise protected loader extent needs a full loader dump;
 - the firmware package updates the application image, not a bundled bootloader image;
 - G30 and G32 receive identical application bytes in both analysed releases;
 - the host updater does not choose the flash destination address;
