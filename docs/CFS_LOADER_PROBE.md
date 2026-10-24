@@ -2,7 +2,7 @@
 
 This note separates three facts that are now independently visible in the K2/CFS stack:
 
-1. the `cfs0` application is linked at `0x08010000`, leaving 64 KiB below it;
+1. the historical stock reset-vector analysis uses a **nominal `0x08010000` address window**, whereas the later-validated G32 **physical APP placement starts at `0x08003000`** ([T113 bootstrap #13](https://github.com/MzTechnology97/k2-openhost-t113-bootstrap/pull/13)); these are not interchangeable and do not prove the complete bootloader size;
 2. the CFS identity protocol explicitly reports `mode=0` for application and `mode=1` for loader;
 3. both community and stock-derived workflows provide an explicit loader-to-application transition.
 
