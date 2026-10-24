@@ -85,7 +85,7 @@ Do not commit Creality `.bin`, `.so`, OTA images, serial numbers or device-speci
 
 ## CFS application / loader boundary
 
-The analysed `cfs0` application images are linked at `0x08010000`, leaving 64 KiB below the application region. The stock `mcu_util_485` update protocol does not transmit a host-selected flash destination address, so erase/write placement is controlled by the peripheral loader. This is strong evidence of an application/loader separation, but it is not proof that the loader always survives an interrupted erase/write. Hardware recovery validation is still required before CFS writes can be enabled.
+The earlier stock reset-vector analysis used a **nominal** `0x08010000` code/address window; it must not be used as the **physical** CFS update placement. Later G32 loader analysis and [T113 bootstrap #13](https://github.com/MzTechnology97/k2-openhost-t113-bootstrap/pull/13) validate physical APP start at **`0x08003000`** (12 KiB above normal flash origin). The original stock image is not a bootloader dump, so the complete loader layout is not proved. The stock `mcu_util_485` update protocol does not transmit a host-selected flash destination address, so erase/write placement is controlled by the peripheral loader. For any image, check size, physical start, flash-page bounds and reset vector **separately**; nominal builder addresses cannot substitute for physical flash placement. This is strong evidence of an application/loader separation, but it is not proof that the loader always survives an interrupted erase/write. Hardware recovery validation is still required before CFS writes can be enabled.
 
 ## CFS loader probe classification
 
